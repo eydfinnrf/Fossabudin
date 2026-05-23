@@ -683,6 +683,96 @@
     }
 
     /* ── GALLERY ─────────────────────────────── */
+    /* ── TILBOÐ ────────────────────────────────── */
+    #tilbod {
+      background: var(--cream);
+    }
+
+    .tilbod-inner {
+      max-width: 1000px;
+      margin: 0 auto;
+    }
+
+    .tilbod-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1.5rem;
+      margin-top: 2.5rem;
+    }
+
+    .tilbod-card {
+      background: #fff;
+      border: 1.5px solid var(--warm);
+      border-radius: 10px;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .tilbod-img {
+      width: 100%;
+      aspect-ratio: 4/3;
+      object-fit: cover;
+      background: var(--warm);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 2.5rem;
+      color: var(--stone);
+      min-height: 180px;
+    }
+
+    .tilbod-body {
+      padding: 1rem 1.1rem 1.2rem;
+      display: flex;
+      flex-direction: column;
+      gap: .4rem;
+      flex: 1;
+    }
+
+    .tilbod-name {
+      font-family: 'Playfair Display', serif;
+      font-size: 1rem;
+      font-weight: 600;
+      color: var(--ink);
+    }
+
+    .tilbod-desc {
+      font-size: .83rem;
+      color: var(--bark);
+      font-weight: 300;
+      line-height: 1.5;
+    }
+
+    .tilbod-pricing {
+      display: flex;
+      align-items: center;
+      gap: .6rem;
+      margin-top: .5rem;
+    }
+
+    .tilbod-badge {
+      background: var(--green);
+      color: #fff;
+      font-size: .7rem;
+      font-weight: 600;
+      letter-spacing: .04em;
+      padding: .2rem .5rem;
+      border-radius: 20px;
+    }
+
+    .tilbod-price-new {
+      font-size: 1.05rem;
+      font-weight: 600;
+      color: var(--green);
+    }
+
+    .tilbod-price-old {
+      font-size: .83rem;
+      color: var(--stone);
+      text-decoration: line-through;
+    }
+
     #galleri {
       background: #fff;
     }
@@ -1071,6 +1161,58 @@
             <td style="color:var(--stone);">Stongt</td>
           </tr>
         </table>
+      </div>
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- TILBOÐ -->
+  <section id="tilbod" style="padding: 5rem 5vw;">
+    <div class="tilbod-inner">
+      <p class="section-label">Tilboð</p>
+      <h2 class="section-title">Viku tilboð</h2>
+      <div class="tilbod-grid">
+
+        <div class="tilbod-card">
+          <div class="tilbod-img">🥛</div>
+          <div class="tilbod-body">
+            <div class="tilbod-name">Mjólk 1L</div>
+            <div class="tilbod-desc">Fersk daglig mjólk</div>
+            <div class="tilbod-pricing">
+              <span class="tilbod-badge">−20%</span>
+              <span class="tilbod-price-new">12 kr</span>
+              <span class="tilbod-price-old">15 kr</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="tilbod-card">
+          <div class="tilbod-img">🍞</div>
+          <div class="tilbod-body">
+            <div class="tilbod-name">Breyð</div>
+            <div class="tilbod-desc">Nýbakt hvardagsbreyð</div>
+            <div class="tilbod-pricing">
+              <span class="tilbod-badge">−15%</span>
+              <span class="tilbod-price-new">17 kr</span>
+              <span class="tilbod-price-old">20 kr</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="tilbod-card">
+          <div class="tilbod-img">🧀</div>
+          <div class="tilbod-body">
+            <div class="tilbod-name">Ostur 400g</div>
+            <div class="tilbod-desc">Føroyskur ostur</div>
+            <div class="tilbod-pricing">
+              <span class="tilbod-badge">−10%</span>
+              <span class="tilbod-price-new">45 kr</span>
+              <span class="tilbod-price-old">50 kr</span>
+            </div>
+          </div>
+        </div>
+
       </div>
     </div>
   </section>
