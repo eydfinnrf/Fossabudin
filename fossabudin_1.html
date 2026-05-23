@@ -1,0 +1,1444 @@
+<!DOCTYPE html>
+<html lang="fo">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Fossábúðin</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --cream:   #f7f4ee;
+      --warm:    #ede8df;
+      --stone:   #c8bfae;
+      --bark:    #6b5c45;
+      --ink:     #2a221a;
+      --green:   #4a6741;
+      --green-lt:#e8efe7;
+      --radius:  4px;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background: var(--cream);
+      color: var(--ink);
+      font-size: 16px;
+      line-height: 1.7;
+      overflow-x: hidden;
+    }
+
+    /* ── NAV ──────────────────────────────────── */
+    nav {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      z-index: 100;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 1.1rem 5vw;
+      background: rgba(247,244,238,0.88);
+      backdrop-filter: blur(10px);
+      border-bottom: 1px solid var(--warm);
+    }
+
+    .nav-logo {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.25rem;
+      font-weight: 600;
+      color: var(--ink);
+      text-decoration: none;
+      letter-spacing: -0.02em;
+    }
+
+    .nav-links {
+      display: flex;
+      gap: 2rem;
+      list-style: none;
+    }
+
+    .nav-links a {
+      font-size: 0.82rem;
+      font-weight: 500;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      text-decoration: none;
+      color: var(--bark);
+      transition: color .2s;
+    }
+
+    .nav-links a:hover { color: var(--green); }
+
+    .hamburger {
+      display: none;
+      flex-direction: column;
+      gap: 5px;
+      cursor: pointer;
+      background: none;
+      border: none;
+      padding: 4px;
+    }
+
+    .hamburger span {
+      display: block;
+      width: 24px;
+      height: 2px;
+      background: var(--ink);
+      transition: all .3s;
+    }
+
+    .mobile-menu {
+      display: none;
+      flex-direction: column;
+      position: fixed;
+      top: 57px; left: 0; right: 0;
+      background: var(--cream);
+      border-bottom: 1px solid var(--warm);
+      padding: 1.5rem 5vw 2rem;
+      gap: 1.2rem;
+      z-index: 99;
+    }
+
+    .mobile-menu.open { display: flex; }
+
+    .mobile-menu a {
+      font-size: 0.9rem;
+      font-weight: 500;
+      letter-spacing: 0.07em;
+      text-transform: uppercase;
+      text-decoration: none;
+      color: var(--bark);
+    }
+
+    /* ── HERO ─────────────────────────────────── */
+    #hero {
+      min-height: 100svh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 8rem 5vw 5rem;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .hero-bg {
+      position: absolute;
+      inset: 0;
+      background:
+        radial-gradient(ellipse 70% 60% at 50% 40%, #e8efe7 0%, transparent 70%),
+        radial-gradient(ellipse 40% 40% at 20% 80%, #ede8df 0%, transparent 60%);
+      pointer-events: none;
+    }
+
+    /* Decorative circles */
+    .hero-bg::before {
+      content: '';
+      position: absolute;
+      width: 340px; height: 340px;
+      border-radius: 50%;
+      border: 1px solid var(--stone);
+      top: 12%; right: -80px;
+      opacity: .45;
+    }
+    .hero-bg::after {
+      content: '';
+      position: absolute;
+      width: 200px; height: 200px;
+      border-radius: 50%;
+      border: 1px solid var(--stone);
+      bottom: 15%; left: -40px;
+      opacity: .35;
+    }
+
+    .hero-eyebrow {
+      font-size: 0.72rem;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--green);
+      font-weight: 500;
+      margin-bottom: 1.2rem;
+      position: relative;
+      animation: fadeUp .7s ease both;
+    }
+
+    .hero-title {
+      font-family: 'Playfair Display', serif;
+      font-size: clamp(3rem, 9vw, 6.5rem);
+      font-weight: 600;
+      line-height: 1.05;
+      letter-spacing: -0.03em;
+      color: var(--ink);
+      position: relative;
+      animation: fadeUp .7s .1s ease both;
+    }
+
+    .hero-title em {
+      font-style: italic;
+      color: var(--green);
+    }
+
+    .hero-tagline {
+      margin-top: 1.6rem;
+      font-size: clamp(1rem, 2.5vw, 1.2rem);
+      color: var(--bark);
+      font-weight: 300;
+      max-width: 440px;
+      position: relative;
+      animation: fadeUp .7s .2s ease both;
+    }
+
+    .hero-cta {
+      margin-top: 2.4rem;
+      display: inline-flex;
+      gap: 1rem;
+      flex-wrap: wrap;
+      justify-content: center;
+      position: relative;
+      animation: fadeUp .7s .3s ease both;
+    }
+
+    .btn {
+      padding: .75rem 1.8rem;
+      border-radius: 100px;
+      font-size: .82rem;
+      font-weight: 500;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      text-decoration: none;
+      transition: all .3s cubic-bezier(.4,0,.2,1);
+      cursor: pointer;
+      font-family: inherit;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .btn::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      opacity: 0;
+      transition: opacity .3s;
+    }
+
+    .btn-primary {
+      background: var(--green);
+      color: #fff;
+      border: none;
+      box-shadow: 0 2px 12px rgba(74,103,65,.25);
+    }
+    .btn-primary::after {
+      background: linear-gradient(135deg, rgba(255,255,255,.15) 0%, transparent 60%);
+    }
+    .btn-primary:hover {
+      background: #3a5332;
+      box-shadow: 0 6px 24px rgba(74,103,65,.4);
+      transform: translateY(-2px) scale(1.03);
+      letter-spacing: 0.1em;
+    }
+    .btn-primary:hover::after { opacity: 1; }
+    .btn-primary:active { transform: translateY(0) scale(.98); }
+
+    .btn-outline {
+      background: transparent;
+      color: var(--ink);
+      border: 1.5px solid rgba(42,34,26,.25);
+      backdrop-filter: blur(4px);
+    }
+    .btn-outline:hover {
+      background: var(--ink);
+      color: var(--cream);
+      border-color: var(--ink);
+      transform: translateY(-2px) scale(1.03);
+      box-shadow: 0 6px 20px rgba(42,34,26,.18);
+      letter-spacing: 0.1em;
+    }
+    .btn-outline:active { transform: translateY(0) scale(.98); }
+
+    /* Opening hours pill in hero */
+    .hero-hours {
+      margin-top: 3rem;
+      display: inline-flex;
+      align-items: center;
+      gap: .6rem;
+      background: var(--warm);
+      border: 1px solid var(--stone);
+      border-radius: 100px;
+      padding: .5rem 1.2rem;
+      font-size: .8rem;
+      color: var(--bark);
+      position: relative;
+      animation: fadeUp .7s .4s ease both;
+    }
+
+    .dot {
+      width: 7px; height: 7px;
+      border-radius: 50%;
+      background: var(--green);
+      flex-shrink: 0;
+    }
+
+    /* ── SECTION COMMONS ───────────────────────── */
+    section { padding: 6rem 5vw; }
+
+    .section-label {
+      font-size: .7rem;
+      letter-spacing: .2em;
+      text-transform: uppercase;
+      color: var(--green);
+      font-weight: 500;
+      margin-bottom: .8rem;
+    }
+
+    .section-title {
+      font-family: 'Playfair Display', serif;
+      font-size: clamp(1.8rem, 4vw, 2.8rem);
+      font-weight: 600;
+      line-height: 1.15;
+      letter-spacing: -.02em;
+      color: var(--ink);
+      margin-bottom: 1.2rem;
+    }
+
+    .section-body {
+      font-size: 1rem;
+      color: var(--bark);
+      font-weight: 300;
+      max-width: 56ch;
+      line-height: 1.8;
+    }
+
+    .divider {
+      height: 1px;
+      background: var(--warm);
+      margin: 0 5vw;
+    }
+
+    /* ── VØRUR – big clickable button ────────── */
+    #vorur { background: #fff; }
+
+    .vorur-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 1rem;
+      background: var(--green-lt);
+      border: 1.5px solid var(--stone);
+      border-radius: 100px;
+      padding: .9rem 1.6rem .9rem 1.4rem;
+      cursor: pointer;
+      font-family: inherit;
+      transition: border-color .2s, box-shadow .2s, transform .15s;
+    }
+    .vorur-btn:hover {
+      border-color: var(--green);
+      box-shadow: 0 4px 18px rgba(74,103,65,.12);
+      transform: translateY(-2px);
+    }
+    .vorur-btn-title {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.05rem;
+      font-weight: 600;
+      color: var(--ink);
+      letter-spacing: -.01em;
+      white-space: nowrap;
+    }
+    .vorur-btn-arrow {
+      width: 32px; height: 32px; border-radius: 50%;
+      background: var(--green); color: #fff;
+      display: flex; align-items: center; justify-content: center;
+      font-size: .9rem; flex-shrink: 0;
+      transition: background .2s, transform .2s;
+    }
+    .vorur-btn:hover .vorur-btn-arrow {
+      background: #3a5332;
+      transform: translateX(2px);
+    }
+    .vorur-btn-hint {
+      margin-top: .6rem;
+      font-size: .78rem;
+      color: var(--stone);
+      letter-spacing: .06em;
+    }
+
+    /* ── ORDER PAGE (full-screen overlay) ─────── */
+    #orderPage {
+      display: none; position: fixed; inset: 0;
+      z-index: 200; background: var(--cream); overflow-y: auto;
+    }
+    #orderPage.active { display: block; }
+
+    .op-nav {
+      position: sticky; top: 0;
+      background: rgba(247,244,238,.93); backdrop-filter: blur(10px);
+      border-bottom: 1px solid var(--warm);
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 1.1rem 5vw; z-index: 10;
+    }
+    .op-nav-logo {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.2rem; font-weight: 600; color: var(--ink);
+    }
+    .op-back {
+      display: inline-flex; align-items: center; gap: .5rem;
+      font-size: .8rem; font-weight: 500; letter-spacing: .06em; text-transform: uppercase;
+      color: var(--bark); background: none; border: 1.5px solid var(--stone);
+      border-radius: var(--radius); padding: .45rem 1rem;
+      cursor: pointer; font-family: inherit; transition: all .2s;
+    }
+    .op-back:hover { border-color: var(--green); color: var(--green); }
+
+    /* Step 1 – choose island */
+    .op-step1 {
+      max-width: 480px; margin: 0 auto; padding: 3rem 5vw 2rem;
+      text-align: center;
+    }
+    .op-step1 .section-label { margin-bottom: .5rem; }
+    .op-step1 .section-title { font-size: clamp(1.5rem,4vw,2rem); margin-bottom: .5rem; }
+    .op-step1 p { font-size: .9rem; color: var(--bark); font-weight: 300; }
+
+    /* The single "choose island" trigger button */
+    .island-trigger {
+      display: flex; align-items: center; justify-content: space-between; gap: 1rem;
+      width: 100%; max-width: 480px; margin: 1.8rem auto 0;
+      background: #fff; border: 1.5px solid var(--warm); border-radius: 10px;
+      padding: 1rem 1.4rem; cursor: pointer; font-family: inherit;
+      transition: border-color .2s, box-shadow .15s;
+      text-align: left;
+    }
+    .island-trigger:hover { border-color: var(--stone); box-shadow: 0 3px 12px rgba(74,103,65,.08); }
+    .island-trigger.open { border-color: var(--green); background: var(--green-lt); }
+    .island-trigger-label {
+      font-family: 'Playfair Display', serif;
+      font-size: 1rem; font-weight: 600; color: var(--ink);
+    }
+    .island-trigger-sub { font-size: .73rem; color: var(--bark); font-weight: 300; margin-top: .05rem; }
+    .island-trigger-chevron {
+      font-size: 1rem; color: var(--stone); transition: transform .3s, color .2s; flex-shrink: 0;
+    }
+    .island-trigger.open .island-trigger-chevron { transform: rotate(90deg); color: var(--green); }
+
+    /* Slide-down: Svínoy + Fugloy pill options */
+    .island-choices-wrap {
+      max-height: 0; overflow: hidden;
+      transition: max-height .4s cubic-bezier(.4,0,.2,1);
+      max-width: 480px; margin: 0 auto;
+    }
+    .island-choices-wrap.open { max-height: 300px; }
+    .island-choices {
+      display: flex; flex-direction: column; gap: .5rem;
+      padding: .5rem 5vw 0;
+    }
+    .island-choice {
+      display: flex; align-items: center; gap: .8rem;
+      width: 100%; background: #fff; border: 1.5px solid var(--warm);
+      border-radius: 8px; padding: .85rem 1.2rem;
+      cursor: pointer; font-family: inherit; text-align: left;
+      transition: border-color .15s, background .15s, box-shadow .15s;
+    }
+    .island-choice:hover { border-color: var(--stone); box-shadow: 0 2px 8px rgba(74,103,65,.07); }
+    .island-choice.selected { border-color: var(--green); background: var(--green-lt); }
+    .island-choice-icon { font-size: 1.2rem; flex-shrink: 0; }
+    .island-choice-name {
+      font-family: 'Playfair Display', serif;
+      font-size: 1rem; font-weight: 600; color: var(--ink); flex: 1;
+    }
+    .island-choice-hint { font-size: .72rem; color: var(--bark); font-weight: 300; margin-top: .05rem; }
+    .island-choice-check {
+      width: 18px; height: 18px; border-radius: 50%; background: var(--green);
+      display: flex; align-items: center; justify-content: center;
+      font-size: .55rem; color: #fff; font-weight: 700;
+      opacity: 0; transition: opacity .15s; flex-shrink: 0;
+    }
+    .island-choice.selected .island-choice-check { opacity: 1; }
+
+    /* Step 2 – full order form slides in */
+    .op-order-form-wrap {
+      max-height: 0; overflow: hidden;
+      transition: max-height .55s cubic-bezier(.4,0,.2,1);
+    }
+    .op-order-form-wrap.open { max-height: 6000px; }
+
+    .op-order-form {
+      max-width: 560px; margin: 0 auto;
+      padding: 1.5rem 5vw 4rem;
+      display: flex; flex-direction: column; gap: .9rem;
+    }
+
+    .op-form-dest {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.3rem; font-weight: 600; color: var(--ink);
+      padding: .5rem 0 .2rem;
+    }
+    .op-form-dest em { color: var(--green); font-style: italic; }
+
+    /* Info box */
+    .form-box {
+      background: #fff; border: 1px solid var(--warm);
+      border-radius: 10px; padding: 1.5rem;
+    }
+    .form-box-title {
+      font-size: .67rem; letter-spacing: .18em; text-transform: uppercase;
+      color: var(--green); font-weight: 500; margin-bottom: 1rem;
+    }
+
+    /* Product categories */
+    .prod-category { margin-bottom: 1.1rem; }
+    .prod-category:last-child { margin-bottom: 0; }
+    .prod-cat-label {
+      font-size: .67rem; letter-spacing: .15em; text-transform: uppercase;
+      color: var(--stone); font-weight: 500; margin-bottom: .45rem;
+    }
+    .prod-grid {
+      display: grid; grid-template-columns: 1fr 1fr; gap: .45rem;
+    }
+    .product-item {
+      display: flex; align-items: center; gap: .5rem;
+      border: 1.5px solid var(--warm); border-radius: 7px;
+      padding: .55rem .7rem; cursor: pointer;
+      background: var(--cream); transition: border-color .15s, background .15s;
+      font-family: inherit; text-align: left; width: 100%;
+    }
+    .product-item:hover { border-color: var(--stone); }
+    .product-item.chosen { border-color: var(--green); background: var(--green-lt); }
+    .product-item.chosen .prod-check { opacity: 1; }
+    .product-emoji { font-size: .95rem; flex-shrink: 0; }
+    .product-name { font-size: .8rem; color: var(--ink); font-weight: 400; flex: 1; }
+    .prod-check {
+      width: 14px; height: 14px; border-radius: 50%; background: var(--green);
+      display: flex; align-items: center; justify-content: center;
+      opacity: 0; transition: opacity .15s;
+      font-size: .48rem; color: #fff; font-weight: 700; flex-shrink: 0;
+    }
+
+    .op-submit {
+      width: 100%; padding: .95rem;
+      background: var(--green); color: #fff; border: none;
+      border-radius: var(--radius); font-family: inherit;
+      font-size: .9rem; font-weight: 500; letter-spacing: .04em;
+      cursor: pointer; transition: background .2s;
+    }
+    .op-submit:hover { background: #3a5332; }
+
+    .op-thankyou {
+      text-align: center;
+      font-size: .82rem;
+      color: var(--stone);
+      font-weight: 300;
+      line-height: 1.65;
+      max-width: 36ch;
+      margin: .8rem auto 0;
+    }
+
+    /* ── UPPLATINGARTÍÐIR (Opening Hours) ────── */
+    #tiding {
+      background: var(--green-lt);
+    }
+
+    .tiding-inner {
+      max-width: 900px;
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 4rem;
+      align-items: start;
+    }
+
+    .hours-table {
+      margin-top: 2rem;
+      border-collapse: collapse;
+      width: 100%;
+    }
+
+    .hours-table tr {
+      border-bottom: 1px solid var(--stone);
+    }
+
+    .hours-table tr:last-child { border-bottom: none; }
+
+    .hours-table td {
+      padding: .75rem 0;
+      font-size: .93rem;
+      color: var(--ink);
+    }
+
+    .hours-table td:last-child {
+      text-align: right;
+      color: var(--bark);
+      font-weight: 300;
+    }
+
+    .hours-table td.day {
+      font-weight: 500;
+    }
+
+    .today-tag {
+      display: inline-block;
+      background: var(--green);
+      color: #fff;
+      font-size: .62rem;
+      letter-spacing: .1em;
+      text-transform: uppercase;
+      padding: .15rem .55rem;
+      border-radius: 100px;
+      margin-left: .5rem;
+      vertical-align: middle;
+    }
+
+    .special-note {
+      margin-top: 1.5rem;
+      background: #fff;
+      border-left: 3px solid var(--green);
+      padding: 1rem 1.2rem;
+      border-radius: 0 var(--radius) var(--radius) 0;
+      font-size: .87rem;
+      color: var(--bark);
+    }
+
+    /* ── UM OKKUM (About) ─────────────────────── */
+    #um {
+      background: var(--cream);
+    }
+
+    .um-inner {
+      max-width: 1100px;
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 5rem;
+      align-items: center;
+    }
+
+    .um-visual {
+      position: relative;
+    }
+
+    .um-img-wrap {
+      width: 100%;
+      aspect-ratio: 4/5;
+      border-radius: 8px;
+      overflow: hidden;
+      background: var(--warm);
+    }
+
+    /* Placeholder image via gradient */
+    .um-img-wrap::before {
+      content: '';
+      display: block;
+      width: 100%;
+      height: 100%;
+      background:
+        linear-gradient(160deg, #d6cfbe 0%, #b8a990 50%, #9a8c75 100%);
+    }
+
+    .um-img-badge {
+      position: absolute;
+      bottom: -1.2rem;
+      right: -1.2rem;
+      width: 120px; height: 120px;
+      border-radius: 50%;
+      background: var(--green);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      color: #fff;
+      text-align: center;
+    }
+
+    .um-img-badge strong {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.9rem;
+      line-height: 1;
+    }
+
+    .um-img-badge span {
+      font-size: .65rem;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+      opacity: .85;
+    }
+
+    .um-text .section-body { margin-bottom: 1.2rem; }
+
+    .um-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: .5rem;
+      margin-top: 1.5rem;
+    }
+
+    .um-tag {
+      background: var(--warm);
+      border: 1px solid var(--stone);
+      border-radius: 100px;
+      padding: .35rem 1rem;
+      font-size: .78rem;
+      color: var(--bark);
+      font-weight: 400;
+    }
+
+    /* ── GALLERY ─────────────────────────────── */
+    #galleri {
+      background: #fff;
+    }
+
+    .galleri-inner {
+      max-width: 1100px;
+      margin: 0 auto;
+    }
+
+    .gallery-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+      flex-wrap: wrap;
+      gap: 1rem;
+      margin-bottom: 2.5rem;
+    }
+
+    .gallery-grid {
+      display: grid;
+      grid-template-columns: repeat(12, 1fr);
+      grid-template-rows: 240px 240px;
+      gap: 1rem;
+    }
+
+    .g-item {
+      border-radius: 6px;
+      overflow: hidden;
+      position: relative;
+    }
+
+    /* Layout positions */
+    .g-item:nth-child(1) { grid-column: 1 / 6; grid-row: 1 / 2; }
+    .g-item:nth-child(2) { grid-column: 6 / 9; grid-row: 1 / 2; }
+    .g-item:nth-child(3) { grid-column: 9 / 13; grid-row: 1 / 3; }
+    .g-item:nth-child(4) { grid-column: 1 / 4; grid-row: 2 / 3; }
+    .g-item:nth-child(5) { grid-column: 4 / 9; grid-row: 2 / 3; }
+
+    /* Colour-coded placeholder images */
+    .g-item::before {
+      content: attr(data-label);
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: flex-end;
+      padding: 1rem;
+      font-size: .75rem;
+      letter-spacing: .06em;
+      text-transform: uppercase;
+      font-weight: 500;
+      color: rgba(255,255,255,.75);
+      font-family: 'DM Sans', sans-serif;
+    }
+
+    .g-item:nth-child(1)::before { background: linear-gradient(135deg,#a09278 0%,#7a6a55 100%); }
+    .g-item:nth-child(2)::before { background: linear-gradient(135deg,#6d8b64 0%,#4a6741 100%); }
+    .g-item:nth-child(3)::before { background: linear-gradient(180deg,#bbb0a0 0%,#8e7f6a 100%); }
+    .g-item:nth-child(4)::before { background: linear-gradient(135deg,#8fa885 0%,#5d7856 100%); }
+    .g-item:nth-child(5)::before { background: linear-gradient(135deg,#c4b9a9 0%,#9e8d79 100%); }
+
+    .g-item::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: transparent;
+      transition: background .3s;
+    }
+
+    .g-item:hover::after {
+      background: rgba(42,34,26,.18);
+    }
+
+    /* ── CONTACT ─────────────────────────────── */
+    #samband {
+      background: var(--cream);
+    }
+
+    .samband-inner {
+      max-width: 600px;
+      margin: 0 auto;
+    }
+
+    .contact-info {
+      margin-top: 2rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1.4rem;
+    }
+
+    .ci-row {
+      display: flex;
+      gap: 1rem;
+      align-items: flex-start;
+    }
+
+    .ci-icon {
+      width: 38px; height: 38px;
+      border-radius: 50%;
+      background: var(--warm);
+      border: 1px solid var(--stone);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1rem;
+      flex-shrink: 0;
+      margin-top: 2px;
+    }
+
+    .ci-text strong {
+      display: block;
+      font-size: .8rem;
+      letter-spacing: .1em;
+      text-transform: uppercase;
+      color: var(--green);
+      font-weight: 500;
+      margin-bottom: .2rem;
+    }
+
+    .ci-text span {
+      font-size: .93rem;
+      color: var(--bark);
+      font-weight: 300;
+    }
+
+    /* Form */
+    .contact-form {
+      background: #fff;
+      border: 1px solid var(--warm);
+      border-radius: 10px;
+      padding: 2.5rem;
+    }
+
+    .contact-form h3 {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.3rem;
+      font-weight: 600;
+      color: var(--ink);
+      margin-bottom: 1.6rem;
+    }
+
+    .form-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+    }
+
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: .4rem;
+      margin-bottom: 1rem;
+    }
+
+    .form-group.full { grid-column: 1 / -1; }
+
+    label {
+      font-size: .78rem;
+      font-weight: 500;
+      letter-spacing: .06em;
+      text-transform: uppercase;
+      color: var(--bark);
+    }
+
+    input, textarea, select {
+      font-family: inherit;
+      font-size: .93rem;
+      font-weight: 300;
+      color: var(--ink);
+      background: var(--cream);
+      border: 1.5px solid var(--warm);
+      border-radius: var(--radius);
+      padding: .7rem .9rem;
+      outline: none;
+      transition: border-color .2s;
+      resize: none;
+    }
+
+    input:focus, textarea:focus, select:focus {
+      border-color: var(--green);
+    }
+
+    input::placeholder, textarea::placeholder { color: var(--stone); }
+
+    textarea { height: 120px; }
+
+    .form-submit {
+      margin-top: .5rem;
+      width: 100%;
+      padding: .85rem;
+      background: var(--green);
+      color: #fff;
+      border: none;
+      border-radius: var(--radius);
+      font-family: inherit;
+      font-size: .87rem;
+      font-weight: 500;
+      letter-spacing: .06em;
+      cursor: pointer;
+      transition: background .2s;
+    }
+
+    .form-submit:hover { background: #3a5332; }
+
+    /* ── FOOTER ─────────────────────────────── */
+    footer {
+      background: var(--ink);
+      color: var(--stone);
+      padding: 3rem 5vw;
+      text-align: center;
+    }
+
+    .footer-logo {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.5rem;
+      color: var(--cream);
+      margin-bottom: .6rem;
+    }
+
+    .footer-tagline {
+      font-size: .82rem;
+      font-weight: 300;
+      margin-bottom: 1.8rem;
+      opacity: .7;
+    }
+
+    .footer-links {
+      display: flex;
+      justify-content: center;
+      gap: 1.8rem;
+      list-style: none;
+      margin-bottom: 2rem;
+      flex-wrap: wrap;
+    }
+
+    .footer-links a {
+      font-size: .78rem;
+      letter-spacing: .1em;
+      text-transform: uppercase;
+      text-decoration: none;
+      color: var(--stone);
+      transition: color .2s;
+    }
+
+    .footer-links a:hover { color: var(--cream); }
+
+    .footer-copy {
+      font-size: .75rem;
+      opacity: .45;
+    }
+
+    /* ── ANIMATIONS ────────────────────────── */
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(18px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ── RESPONSIVE ────────────────────────── */
+    @media (max-width: 900px) {
+      .nav-links { display: none; }
+      .hamburger { display: flex; }
+
+      .tiding-inner,
+      .um-inner,
+      .samband-inner {
+        grid-template-columns: 1fr;
+        gap: 2.5rem;
+      }
+
+      .op-islands { grid-template-columns: 1fr; }
+
+      .um-img-badge { width: 90px; height: 90px; }
+      .um-img-badge strong { font-size: 1.5rem; }
+
+      .gallery-grid {
+        grid-template-columns: 1fr 1fr;
+        grid-template-rows: auto;
+      }
+
+      .g-item:nth-child(1) { grid-column: 1 / 2; grid-row: auto; }
+      .g-item:nth-child(2) { grid-column: 2 / 3; grid-row: auto; }
+      .g-item:nth-child(3) { grid-column: 1 / 2; grid-row: auto; aspect-ratio: unset; }
+      .g-item:nth-child(4) { grid-column: 2 / 3; grid-row: auto; }
+      .g-item:nth-child(5) { grid-column: 1 / 3; grid-row: auto; }
+
+      .g-item { height: 200px; }
+
+      .form-row { grid-template-columns: 1fr; }
+
+      .gallery-header { flex-direction: column; align-items: flex-start; }
+    }
+
+    @media (max-width: 560px) {
+      section { padding: 4rem 5vw; }
+      .gallery-grid { grid-template-columns: 1fr; }
+      .g-item:nth-child(n) { grid-column: 1 / 2; height: 180px; }
+      .contact-form { padding: 1.8rem 1.2rem; }
+      .op-form-box { padding: 1.8rem 1.2rem; }
+      .vorur-btn { padding: 1.8rem; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- NAV -->
+  <nav>
+    <a href="#hero" class="nav-logo">Fossábúðin</a>
+    <ul class="nav-links">
+      <li><a href="#tiding">Tíðir</a></li>
+      <li><a href="#um">Um okkum</a></li>
+      <li><a href="#galleri">Galleri</a></li>
+      <li><a href="#samband">Samband</a></li>
+    </ul>
+    <button class="hamburger" onclick="toggleMenu()" aria-label="Menu">
+      <span></span><span></span><span></span>
+    </button>
+  </nav>
+
+  <div class="mobile-menu" id="mobileMenu">
+    <a href="#tiding"  onclick="closeMenu()">Tíðir</a>
+    <a href="#um"      onclick="closeMenu()">Um okkum</a>
+    <a href="#galleri" onclick="closeMenu()">Galleri</a>
+    <a href="#samband" onclick="closeMenu()">Samband</a>
+  </div>
+
+  <!-- HERO -->
+  <section id="hero">
+    <div class="hero-bg"></div>
+    <p class="hero-eyebrow">Bygdabúðin norð um fjall</p>
+    <h1 class="hero-title">Fossá<em>búðin</em></h1>
+    <p class="hero-tagline">Fersk vørur, venliga tænastan og alt tú hevur týrft — rétt hjá tær.</p>
+    <div class="hero-cta">
+      <button onclick="openOrderPage()" class="btn btn-primary">Bílegg vørur</button>
+      <a href="tel:+298277737" class="btn btn-outline">Kontakta okkum</a>
+    </div>
+    <div class="hero-hours">
+      <span class="dot"></span>
+      Í dag opið &nbsp;·&nbsp; 09:00 – 19:00
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- UPPLATINGARTÍÐIR -->
+  <section id="tiding">
+    <div class="tiding-inner">
+      <div>
+        <p class="section-label">Upplatingartíðir</p>
+        <h2 class="section-title">Nær hava vit opið?</h2>
+
+        <div class="special-note">
+          📞 Hevur tú serstøðu? Ring til okkum — vit hjálpa tær gjarna!
+        </div>
+      </div>
+      <div>
+        <table class="hours-table">
+          <tr>
+            <td class="day">Mánadagur</td>
+            <td>09:00 – 19:00</td>
+          </tr>
+          <tr>
+            <td class="day">Týsdagur</td>
+            <td>09:00 – 19:00</td>
+          </tr>
+          <tr>
+            <td class="day">Mikudagur</td>
+            <td>09:00 – 19:00</td>
+          </tr>
+          <tr>
+            <td class="day">Hósdagur</td>
+            <td>09:00 – 19:00</td>
+          </tr>
+          <tr>
+            <td class="day">Fríggjadagur</td>
+            <td>09:00 – 19:00</td>
+          </tr>
+          <tr>
+            <td class="day">
+              Leygardagur
+              <span class="today-tag" id="todayTag"></span>
+            </td>
+            <td>09:00 – 19:00</td>
+          </tr>
+          <tr>
+            <td class="day">Sunnudagur</td>
+            <td style="color:var(--stone);">Stongt</td>
+          </tr>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- UM OKKUM -->
+  <section id="um">
+    <div class="um-inner">
+      <div class="um-visual">
+        <div class="um-img-wrap"></div>
+        <div class="um-img-badge">
+          <strong>40+</strong>
+          <span>ár í búðini</span>
+        </div>
+      </div>
+      <div class="um-text">
+        <p class="section-label">Um okkum</p>
+        <h2 class="section-title">Um Fossábúðina</h2>
+        <p class="section-body">
+          Fossábúðin í Norðdepli er tann lítli bygdarhandilin, har nógv fólk í økinum hava gingið inn og út gjøgnum árini. Her kanst tú fáa tað mesta til gerandisdagin, eitt prát yvir diskin og ta hugnaligu kensluna, sum bara ein veruligur bygdarhandil hevur.
+        </p>
+        <p class="section-body">
+          Vit leggja dent á góða tænastu, gott lag og at hava tað, sum fólk í bygdini hava brúk fyri. Hjá okkum eru bæði føst kundar, ferðafólk og øll onnur altíð vælkomin inn á gólvið. Fossábúðin er ikki bara ein handil – hon er eisini ein partur av bygdini og gerandisdegnum hjá teimum, sum búgva her.
+        </p>
+
+      </div>
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- GALLERI -->
+  <section id="galleri">
+    <div class="galleri-inner">
+      <div class="gallery-header">
+        <div>
+          <p class="section-label">Galleri</p>
+          <h2 class="section-title">Myndir úr búðini</h2>
+        </div>
+        <p class="section-body" style="max-width:28ch;margin:0;font-size:.9rem;">Ein gluggvi inn í hvardagslivin hjá Fossábúðini.</p>
+      </div>
+      <div class="gallery-grid">
+        <div class="g-item" data-label="Innrøð"></div>
+        <div class="g-item" data-label="Friskar vørur"></div>
+        <div class="g-item" data-label="Framan á búðini"></div>
+        <div class="g-item" data-label="Breyðhyllan"></div>
+        <div class="g-item" data-label="Bygdin"></div>
+      </div>
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- SAMBAND -->
+  <section id="samband">
+    <div class="samband-inner">
+      <div>
+        <p class="section-label">Samband</p>
+        <div class="contact-info">
+          <div class="ci-row">
+            <div class="ci-icon">📍</div>
+            <div class="ci-text">
+              <strong>Adressa</strong>
+              <span>Fossávegur 9, Norðdepil</span>
+            </div>
+          </div>
+          <div class="ci-row">
+            <div class="ci-icon">📞</div>
+            <div class="ci-text">
+              <strong>Telefon</strong>
+              <span>+298 277737</span>
+            </div>
+          </div>
+          <div class="ci-row">
+            <div class="ci-icon">✉️</div>
+            <div class="ci-text">
+              <strong>Teldupostur</strong>
+              <span>post@fossabudin.fo</span>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FOOTER -->
+  <footer>
+    <div class="footer-logo">Fossábúðin</div>
+    <div class="footer-tagline">Fersk vørur · Venlig tænastan · Hjartaslátturin í bygdini</div>
+    <ul class="footer-links">
+      <li><a href="#tiding">Tíðir</a></li>
+      <li><a href="#um">Um okkum</a></li>
+      <li><a href="#galleri">Galleri</a></li>
+      <li><a href="#samband">Samband</a></li>
+    </ul>
+    <p class="footer-copy">© 2025 Fossábúðin. Allur rættur fyrivarðin.</p>
+  </footer>
+
+  <!-- ORDER PAGE OVERLAY -->
+  <div id="orderPage">
+    <nav class="op-nav">
+      <span class="op-nav-logo">Fossábúðin</span>
+      <button class="op-back" onclick="closeOrderPage()">← Til baka</button>
+    </nav>
+
+    <!-- Step 1: choose island -->
+    <div class="op-step1">
+      <p class="section-label">Paning</p>
+      <h2 class="section-title">Bílegg vørur</h2>
+      <p>Vel oyggina tú panast til.</p>
+    </div>
+
+    <!-- Single trigger button -->
+    <button class="island-trigger" id="islandTrigger" onclick="toggleIslandChoices()">
+      <div>
+        <div class="island-trigger-label" id="triggerLabel">Vel oyggina</div>
+        <div class="island-trigger-sub" id="triggerSub">Svínoy ella Fugloy</div>
+      </div>
+      <span class="island-trigger-chevron">›</span>
+    </button>
+
+    <!-- Slide-down: the two island options -->
+    <div class="island-choices-wrap" id="islandChoicesWrap">
+      <div class="island-choices">
+        <button class="island-choice" id="choice-svinoy" onclick="selectIsland('svinoy')">
+          <span class="island-choice-icon">⛵</span>
+          <div>
+            <div class="island-choice-name">Svínoy</div>
+            <div class="island-choice-hint">Sending á bátsdegi</div>
+          </div>
+          <span class="island-choice-check">✓</span>
+        </button>
+        <button class="island-choice" id="choice-fugloy" onclick="selectIsland('fugloy')">
+          <span class="island-choice-icon">🦅</span>
+          <div>
+            <div class="island-choice-name">Fugloy</div>
+            <div class="island-choice-hint">Kirkja og Hattarvík</div>
+          </div>
+          <span class="island-choice-check">✓</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Step 2: full order form, slides in after island chosen -->
+    <div class="op-order-form-wrap" id="orderFormWrap">
+      <div class="op-order-form">
+
+        <p class="op-form-dest">Paning til <em id="formDestLabel">—</em></p>
+
+        <!-- Contact info -->
+        <div class="form-box">
+          <p class="form-box-title">Tínar upplýsingar</p>
+          <div class="form-row">
+            <div class="form-group">
+              <label for="o-name">Navn</label>
+              <input type="text" id="o-name" placeholder="Tín navn" />
+            </div>
+            <div class="form-group">
+              <label for="o-phone">Telefon</label>
+              <input type="tel" id="o-phone" placeholder="+298 …" />
+            </div>
+          </div>
+          <div class="form-group" style="margin-bottom:0">
+            <label for="o-addr">Adressa</label>
+            <input type="text" id="o-addr" placeholder="Húsanr., bygd…" />
+          </div>
+        </div>
+
+        <!-- Products by category -->
+        <div class="form-box">
+          <p class="form-box-title">Vel vørur</p>
+
+          <div class="prod-category">
+            <p class="prod-cat-label">Mjólk &amp; mjólkarpróðuktar</p>
+            <div class="prod-grid">
+              <button class="product-item" onclick="toggleProduct(this)"><span class="product-emoji">🥛</span><span class="product-name">Mjólk</span><span class="prod-check">✓</span></button>
+              <button class="product-item" onclick="toggleProduct(this)"><span class="product-emoji">🧀</span><span class="product-name">Ostur</span><span class="prod-check">✓</span></button>
+              <button class="product-item" onclick="toggleProduct(this)"><span class="product-emoji">🧈</span><span class="product-name">Smjør</span><span class="prod-check">✓</span></button>
+              <button class="product-item" onclick="toggleProduct(this)"><span class="product-emoji">🍦</span><span class="product-name">Rjómi</span><span class="prod-check">✓</span></button>
+              <button class="product-item" onclick="toggleProduct(this)"><span class="product-emoji">🥣</span><span class="product-name">Skyr / jogurt</span><span class="prod-check">✓</span></button>
+            </div>
+          </div>
+
+          <div class="prod-category">
+            <p class="prod-cat-label">Kjøt &amp; fiskur</p>
+            <div class="prod-grid">
+              <button class="product-item" onclick="toggleProduct(this)"><span class="product-emoji">🥩</span><span class="product-name">Kjøt</span><span class="prod-check">✓</span></button>
+              <button class="product-item" onclick="toggleProduct(this)"><span class="product-emoji">🐟</span><span class="product-name">Fiskur</span><span class="prod-check">✓</span></button>
+              <button class="product-item" onclick="toggleProduct(this)"><span class="product-emoji">🍗</span><span class="product-name">Kjúklingur</span><span class="prod-check">✓</span></button>
+              <button class="product-item" onclick="toggleProduct(this)"><span class="product-emoji">🥓</span><span class="product-name">Beikon</span><span class="prod-check">✓</span></button>
+              <button class="product-item" onclick="toggleProduct(this)"><span class="product-emoji">🌭</span><span class="product-name">Pylsa</span><span class="prod-check">✓</span></button>
+            </div>
+          </div>
+
+          <div class="prod-category">
+            <p class="prod-cat-label">Breyð &amp; bakst</p>
+            <div class="prod-grid">
+              <button class="product-item" onclick="toggleProduct(this)"><span class="product-emoji">🥖</span><span class="product-name">Breyð</span><span class="prod-check">✓</span></button>
+              <button class="product-item" onclick="toggleProduct(this)"><span class="product-emoji">🥐</span><span class="product-name">Bollar</span><span class="prod-check">✓</span></button>
+              <button class="product-item" onclick="toggleProduct(this)"><span class="product-emoji">🍞</span><span class="product-name">Rúgbreyð</span><span class="prod-check">✓</span></button>
+              <button class="product-item" onclick="toggleProduct(this)"><span class="product-emoji">🥚</span><span class="product-name">Egg</span><span class="prod-check">✓</span></button>
+            </div>
+          </div>
+
+          <div class="prod-category">
+            <p class="prod-cat-label">Grønmeti &amp; frukt</p>
+            <div class="prod-grid">
+              <button class="product-item" onclick="toggleProduct(this)"><span class="product-emoji">🥦</span><span class="product-name">Grønmeti</span><span class="prod-check">✓</span></button>
+              <button class="product-item" onclick="toggleProduct(this)"><span class="product-emoji">🍅</span><span class="product-name">Tomatir</span><span class="prod-check">✓</span></button>
+              <button class="product-item" onclick="toggleProduct(this)"><span class="product-emoji">🥕</span><span class="product-name">Gulrætur</span><span class="prod-check">✓</span></button>
+              <button class="product-item" onclick="toggleProduct(this)"><span class="product-emoji">🍎</span><span class="product-name">Frukt</span><span class="prod-check">✓</span></button>
+              <button class="product-item" onclick="toggleProduct(this)"><span class="product-emoji">🍌</span><span class="product-name">Bananur</span><span class="prod-check">✓</span></button>
+            </div>
+          </div>
+
+          <div class="prod-category">
+            <p class="prod-cat-label">Sælugræti</p>
+            <div class="prod-grid">
+              <button class="product-item" onclick="toggleProduct(this)"><span class="product-emoji">🍫</span><span class="product-name">Sjokólata</span><span class="prod-check">✓</span></button>
+              <button class="product-item" onclick="toggleProduct(this)"><span class="product-emoji">🍬</span><span class="product-name">Sælugræti</span><span class="prod-check">✓</span></button>
+              <button class="product-item" onclick="toggleProduct(this)"><span class="product-emoji">🍪</span><span class="product-name">Keks</span><span class="prod-check">✓</span></button>
+              <button class="product-item" onclick="toggleProduct(this)"><span class="product-emoji">🧁</span><span class="product-name">Kaka</span><span class="prod-check">✓</span></button>
+            </div>
+          </div>
+
+          <div class="prod-category">
+            <p class="prod-cat-label">Drykkir</p>
+            <div class="prod-grid">
+              <button class="product-item" onclick="toggleProduct(this)"><span class="product-emoji">☕</span><span class="product-name">Kaffi</span><span class="prod-check">✓</span></button>
+              <button class="product-item" onclick="toggleProduct(this)"><span class="product-emoji">🍵</span><span class="product-name">Te</span><span class="prod-check">✓</span></button>
+              <button class="product-item" onclick="toggleProduct(this)"><span class="product-emoji">🧃</span><span class="product-name">Safi</span><span class="prod-check">✓</span></button>
+              <button class="product-item" onclick="toggleProduct(this)"><span class="product-emoji">🥤</span><span class="product-name">Gos</span><span class="prod-check">✓</span></button>
+              <button class="product-item" onclick="toggleProduct(this)"><span class="product-emoji">💧</span><span class="product-name">Vatn</span><span class="prod-check">✓</span></button>
+            </div>
+          </div>
+
+          <div class="prod-category">
+            <p class="prod-cat-label">Torrvørur &amp; hermetikkur</p>
+            <div class="prod-grid">
+              <button class="product-item" onclick="toggleProduct(this)"><span class="product-emoji">🥫</span><span class="product-name">Hermetikkur</span><span class="prod-check">✓</span></button>
+              <button class="product-item" onclick="toggleProduct(this)"><span class="product-emoji">🍝</span><span class="product-name">Pasta / rís</span><span class="prod-check">✓</span></button>
+              <button class="product-item" onclick="toggleProduct(this)"><span class="product-emoji">🫙</span><span class="product-name">Sósa</span><span class="prod-check">✓</span></button>
+              <button class="product-item" onclick="toggleProduct(this)"><span class="product-emoji">🧂</span><span class="product-name">Salt / krydd</span><span class="prod-check">✓</span></button>
+            </div>
+          </div>
+
+          <div class="prod-category">
+            <p class="prod-cat-label">Heimavørur &amp; reingerð</p>
+            <div class="prod-grid">
+              <button class="product-item" onclick="toggleProduct(this)"><span class="product-emoji">🧴</span><span class="product-name">Reingerð</span><span class="prod-check">✓</span></button>
+              <button class="product-item" onclick="toggleProduct(this)"><span class="product-emoji">🧻</span><span class="product-name">Klútar / pappur</span><span class="prod-check">✓</span></button>
+              <button class="product-item" onclick="toggleProduct(this)"><span class="product-emoji">🪥</span><span class="product-name">Húðvøra</span><span class="prod-check">✓</span></button>
+              <button class="product-item" onclick="toggleProduct(this)"><span class="product-emoji">🧹</span><span class="product-name">Heimavørur</span><span class="prod-check">✓</span></button>
+            </div>
+          </div>
+
+          <div class="prod-category" style="margin-bottom:0">
+            <p class="prod-cat-label">Annað</p>
+            <div class="form-group" style="margin-bottom:0">
+              <textarea id="o-note" style="height:72px" placeholder="Serligar vørur, antal ella viðmerkingar…"></textarea>
+            </div>
+          </div>
+        </div>
+
+        <button class="op-submit" onclick="submitOrder()">Send paning →</button>
+
+        <p class="op-thankyou">Takk fyri tína paning. Tú fært ein SMS, tá ið paning er send, við upplýsingum um hvørjum bátaferð vørurnar koma á.</p>
+      </div>
+    </div>
+
+  </div><!-- /orderPage -->
+
+  <script>
+    /* ── Mobile menu ── */
+    function toggleMenu() { document.getElementById('mobileMenu').classList.toggle('open'); }
+    function closeMenu()  { document.getElementById('mobileMenu').classList.remove('open'); }
+
+    /* ── Open / close order page ── */
+    function openOrderPage() {
+      document.getElementById('orderPage').classList.add('active');
+      document.body.style.overflow = 'hidden';
+      document.getElementById('orderPage').scrollTop = 0;
+      // reset
+      document.getElementById('islandChoicesWrap').classList.remove('open');
+      document.getElementById('islandTrigger').classList.remove('open');
+      document.getElementById('orderFormWrap').classList.remove('open');
+      document.getElementById('triggerLabel').textContent = 'Vel oyggina';
+      document.getElementById('triggerSub').textContent = 'Svínoy ella Fugloy';
+      ['svinoy','fugloy'].forEach(id => document.getElementById('choice-' + id).classList.remove('selected'));
+      selectedIsland = null;
+    }
+    function closeOrderPage() {
+      document.getElementById('orderPage').classList.remove('active');
+      document.body.style.overflow = '';
+    }
+
+    /* ── Toggle the island dropdown ── */
+    let selectedIsland = null;
+
+    function toggleIslandChoices() {
+      const wrap = document.getElementById('islandChoicesWrap');
+      const trigger = document.getElementById('islandTrigger');
+      const isOpen = wrap.classList.contains('open');
+      wrap.classList.toggle('open', !isOpen);
+      trigger.classList.toggle('open', !isOpen);
+    }
+
+    /* ── Select an island ── */
+    function selectIsland(id) {
+      selectedIsland = id;
+      const labels = { svinoy: 'Svínoy', fugloy: 'Fugloy' };
+      const hints  = { svinoy: 'Sending á bátsdegi', fugloy: 'Kirkja og Hattarvík' };
+
+      // Mark chosen
+      ['svinoy','fugloy'].forEach(c => document.getElementById('choice-' + c).classList.remove('selected'));
+      document.getElementById('choice-' + id).classList.add('selected');
+
+      // Update trigger label & close dropdown
+      document.getElementById('triggerLabel').textContent = labels[id];
+      document.getElementById('triggerSub').textContent = hints[id];
+      document.getElementById('islandChoicesWrap').classList.remove('open');
+      document.getElementById('islandTrigger').classList.remove('open');
+
+      // Update form destination label & open form
+      document.getElementById('formDestLabel').textContent = labels[id];
+      const formWrap = document.getElementById('orderFormWrap');
+      formWrap.classList.add('open');
+      setTimeout(() => formWrap.scrollIntoView({ behavior: 'smooth', block: 'start' }), 80);
+    }
+
+    /* ── Toggle product chip ── */
+    function toggleProduct(el) { el.classList.toggle('chosen'); }
+
+    /* ── Submit order ── */
+    function submitOrder() {
+      const name = document.getElementById('o-name').value.trim();
+      const addr = document.getElementById('o-addr').value.trim();
+      if (!name) { alert('Vinarliga skriva títt navn.'); return; }
+      if (!addr) { alert('Vinarliga skriva tína adressa.'); return; }
+      const label = selectedIsland === 'svinoy' ? 'Svínoy' : 'Fugloy';
+      alert('Takk, ' + name + '! Tín paning til ' + label + ' er móttøkin. Vit taka samband við teg um fráfarartíðina. 🙏');
+      closeOrderPage();
+    }
+
+    /* ── Mark today in hours table ── */
+    (function() {
+      const day  = new Date().getDay();
+      const tag  = document.getElementById('todayTag');
+      if (!tag) return;
+      const rows = document.querySelectorAll('.hours-table tr');
+      const map  = {1:0,2:1,3:2,4:3,5:4,6:5,0:6};
+      tag.parentNode.removeChild(tag);
+      const idx = map[day];
+      if (idx !== undefined && rows[idx]) {
+        const s = document.createElement('span');
+        s.className = 'today-tag'; s.textContent = 'Í dag';
+        rows[idx].querySelector('.day').appendChild(s);
+      }
+    })();
+
+    /* ── Contact form ── */
+    function handleSubmit() {
+      const name = document.getElementById('name').value.trim();
+      if (!name) { alert('Vinarliga skriva títt navn.'); return; }
+      alert('Takk, ' + name + '! Vit svara tær so skjótt vit kunnu. 🙏');
+    }
+  </script>
+</body>
+</html>
+
