@@ -694,10 +694,29 @@
     }
 
     .tilbod-grid {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 1.5rem;
+      display: flex;
+      flex-direction: row;
+      gap: 1.2rem;
       margin-top: 2.5rem;
+      overflow-x: auto;
+      padding-bottom: 1rem;
+      scroll-snap-type: x mandatory;
+      -webkit-overflow-scrolling: touch;
+      scrollbar-width: thin;
+      scrollbar-color: var(--stone) transparent;
+    }
+
+    .tilbod-grid::-webkit-scrollbar {
+      height: 5px;
+    }
+
+    .tilbod-grid::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    .tilbod-grid::-webkit-scrollbar-thumb {
+      background: var(--stone);
+      border-radius: 10px;
     }
 
     .tilbod-card {
@@ -707,6 +726,8 @@
       overflow: hidden;
       display: flex;
       flex-direction: column;
+      flex: 0 0 260px;
+      scroll-snap-align: start;
     }
 
     .tilbod-img {
