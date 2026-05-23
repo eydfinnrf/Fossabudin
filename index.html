@@ -383,8 +383,15 @@
     .op-nav .op-back { position: absolute; left: 5vw; }
     .op-nav-logo {
       font-family: 'Playfair Display', serif;
-      font-size: 1.6rem; font-weight: 600; color: var(--ink);
-      letter-spacing: -.02em;
+      font-size: 1.8rem;
+      font-weight: 600;
+      color: var(--ink);
+      letter-spacing: -.03em;
+      line-height: 1;
+    }
+    .op-nav-logo em {
+      font-style: italic;
+      color: var(--green);
     }
     .op-back {
       display: inline-flex; align-items: center; gap: .5rem;
@@ -1410,7 +1417,7 @@
   <!-- ORDER PAGE OVERLAY -->
   <div id="orderPage">
     <nav class="op-nav">
-      <span class="op-nav-logo">Fossábúðin</span>
+      <span class="op-nav-logo">Fossá<em>búðin</em></span>
       <button class="op-back" onclick="closeOrderPage()">← Aftur</button>
     </nav>
 
