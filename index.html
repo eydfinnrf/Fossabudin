@@ -506,6 +506,60 @@
     .product-item:hover { border-color: var(--stone); }
     .product-item.chosen { border-color: var(--green); background: var(--green-lt); }
     .product-item.chosen .prod-check { opacity: 1; }
+
+    /* expandable dropdown items */
+    .expandable-wrap { grid-column: 1 / -1; }
+    .expand-arrow {
+      margin-left: auto;
+      font-size: .75rem;
+      color: var(--stone);
+      transition: transform .25s;
+      flex-shrink: 0;
+    }
+    .expandable-wrap.open .expand-arrow { transform: rotate(90deg); }
+    .sub-panel {
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height .35s ease;
+      display: flex;
+      flex-direction: column;
+      gap: .35rem;
+      margin-top: 0;
+      padding-left: .3rem;
+    }
+    .expandable-wrap.open .sub-panel {
+      max-height: 400px;
+      margin-top: .4rem;
+    }
+    .sub-item {
+      display: flex;
+      align-items: center;
+      gap: .6rem;
+      border: 1.5px solid var(--warm);
+      border-radius: 7px;
+      padding: .5rem .85rem;
+      cursor: pointer;
+      background: var(--cream);
+      transition: border-color .15s, background .15s;
+      font-family: inherit;
+      font-size: .82rem;
+      color: var(--ink);
+      text-align: left;
+      width: 100%;
+    }
+    .sub-item:hover { border-color: var(--stone); }
+    .sub-item.chosen { border-color: var(--green); background: var(--green-lt); }
+    .sub-dot {
+      width: 10px; height: 10px;
+      border-radius: 50%;
+      border: 1.5px solid var(--stone);
+      flex-shrink: 0;
+      transition: background .15s, border-color .15s;
+    }
+    .sub-item.chosen .sub-dot {
+      background: var(--green);
+      border-color: var(--green);
+    }
     .product-emoji { font-size: .95rem; flex-shrink: 0; }
     .product-name { font-size: .8rem; color: var(--ink); font-weight: 400; flex: 1; }
     .prod-check {
@@ -1462,11 +1516,69 @@
           <div class="prod-category">
             <p class="prod-cat-label">Mjólk &amp; mjólkarpróðuktar</p>
             <div class="prod-grid">
-              <button class="product-item" onclick="toggleProduct(this)"><span class="product-emoji">🥛</span><span class="product-name">Mjólk</span><span class="prod-check">✓</span></button>
-              <button class="product-item" onclick="toggleProduct(this)"><span class="product-emoji">🧀</span><span class="product-name">Ostur</span><span class="prod-check">✓</span></button>
-              <button class="product-item" onclick="toggleProduct(this)"><span class="product-emoji">🧈</span><span class="product-name">Smjør</span><span class="prod-check">✓</span></button>
+
+              <!-- Mjólk -->
+              <div class="expandable-wrap">
+                <button class="product-item" onclick="toggleExpand(this)">
+                  <span class="product-emoji">🥛</span>
+                  <span class="product-name">Mjólk</span>
+                  <span class="expand-arrow">›</span>
+                </button>
+                <div class="sub-panel">
+                  <button class="sub-item" onclick="toggleSubItem(this)"><span class="sub-dot"></span>Blá mjólk (1.5% feitt)</button>
+                  <button class="sub-item" onclick="toggleSubItem(this)"><span class="sub-dot"></span>Gul mjólk (3.5% feitt)</button>
+                  <button class="sub-item" onclick="toggleSubItem(this)"><span class="sub-dot"></span>Grøn mjólk (0.5% feitt)</button>
+                  <button class="sub-item" onclick="toggleSubItem(this)"><span class="sub-dot"></span>Havramjólk</button>
+                </div>
+              </div>
+
+              <!-- Ostur -->
+              <div class="expandable-wrap">
+                <button class="product-item" onclick="toggleExpand(this)">
+                  <span class="product-emoji">🧀</span>
+                  <span class="product-name">Ostur</span>
+                  <span class="expand-arrow">›</span>
+                </button>
+                <div class="sub-panel">
+                  <button class="sub-item" onclick="toggleSubItem(this)"><span class="sub-dot"></span>Stórur ostur (heil)</button>
+                  <button class="sub-item" onclick="toggleSubItem(this)"><span class="sub-dot"></span>Lítil ostur (heil)</button>
+                  <button class="sub-item" onclick="toggleSubItem(this)"><span class="sub-dot"></span>Leyðdur ostur (snittaður)</button>
+                  <button class="sub-item" onclick="toggleSubItem(this)"><span class="sub-dot"></span>Ríviostur</button>
+                </div>
+              </div>
+
+              <!-- Smjør -->
+              <div class="expandable-wrap">
+                <button class="product-item" onclick="toggleExpand(this)">
+                  <span class="product-emoji">🧈</span>
+                  <span class="product-name">Smjør</span>
+                  <span class="expand-arrow">›</span>
+                </button>
+                <div class="sub-panel">
+                  <button class="sub-item" onclick="toggleSubItem(this)"><span class="sub-dot"></span>Saltað smjør</button>
+                  <button class="sub-item" onclick="toggleSubItem(this)"><span class="sub-dot"></span>Ósaltað smjør</button>
+                  <button class="sub-item" onclick="toggleSubItem(this)"><span class="sub-dot"></span>Lættursmjør</button>
+                </div>
+              </div>
+
+              <!-- Rjómi -->
               <button class="product-item" onclick="toggleProduct(this)"><span class="product-emoji">🍦</span><span class="product-name">Rjómi</span><span class="prod-check">✓</span></button>
-              <button class="product-item" onclick="toggleProduct(this)"><span class="product-emoji">🥣</span><span class="product-name">Skyr / jogurt</span><span class="prod-check">✓</span></button>
+
+              <!-- Skyr / Jogurt -->
+              <div class="expandable-wrap">
+                <button class="product-item" onclick="toggleExpand(this)">
+                  <span class="product-emoji">🥣</span>
+                  <span class="product-name">Skyr / jogurt</span>
+                  <span class="expand-arrow">›</span>
+                </button>
+                <div class="sub-panel">
+                  <button class="sub-item" onclick="toggleSubItem(this)"><span class="sub-dot"></span>Náttúruligur skyr</button>
+                  <button class="sub-item" onclick="toggleSubItem(this)"><span class="sub-dot"></span>Berjaskyr</button>
+                  <button class="sub-item" onclick="toggleSubItem(this)"><span class="sub-dot"></span>Vanilju jogurt</button>
+                  <button class="sub-item" onclick="toggleSubItem(this)"><span class="sub-dot"></span>Grikkskur jogurt</button>
+                </div>
+              </div>
+
             </div>
           </div>
 
@@ -1619,6 +1731,19 @@
 
     /* ── Toggle product chip ── */
     function toggleProduct(el) { el.classList.toggle('chosen'); }
+
+    function toggleExpand(btn) {
+      const wrap = btn.closest('.expandable-wrap');
+      wrap.classList.toggle('open');
+    }
+
+    function toggleSubItem(btn) {
+      btn.classList.toggle('chosen');
+      const wrap = btn.closest('.expandable-wrap');
+      const parentBtn = wrap.querySelector('.product-item');
+      const anyChosen = wrap.querySelectorAll('.sub-item.chosen').length > 0;
+      parentBtn.classList.toggle('chosen', anyChosen);
+    }
 
     /* ── Submit order ── */
     function submitOrder() {
