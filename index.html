@@ -376,12 +376,15 @@
       position: sticky; top: 0;
       background: rgba(247,244,238,.93); backdrop-filter: blur(10px);
       border-bottom: 1px solid var(--warm);
-      display: flex; align-items: center; justify-content: space-between;
-      padding: 1.1rem 5vw; z-index: 10;
+      display: flex; align-items: center; justify-content: center;
+      padding: 1.4rem 5vw; z-index: 10;
+      position: relative;
     }
+    .op-nav .op-back { position: absolute; left: 5vw; }
     .op-nav-logo {
       font-family: 'Playfair Display', serif;
-      font-size: 1.2rem; font-weight: 600; color: var(--ink);
+      font-size: 1.6rem; font-weight: 600; color: var(--ink);
+      letter-spacing: -.02em;
     }
     .op-back {
       display: inline-flex; align-items: center; gap: .5rem;
