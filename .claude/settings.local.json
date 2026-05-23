@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git remote *)",
+      "Bash(git push *)",
+      "Bash(curl -s https://api.github.com/repos/eydfinnrf/Fossabudin/pages)"
+    ]
+  }
+}
