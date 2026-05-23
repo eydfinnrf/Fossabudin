@@ -602,6 +602,19 @@
       font-size: .85rem;
       font-weight: 500;
     }
+
+    .order-sale-badge {
+      font-size: .62rem;
+      font-weight: 700;
+      color: #fff;
+      background: var(--green);
+      padding: .15rem .45rem;
+      border-radius: 20px;
+      flex-shrink: 0;
+      margin-left: auto;
+      letter-spacing: .02em;
+    }
+    .sub-item .order-sale-badge { margin-left: auto; }
     .product-emoji { font-size: .95rem; flex-shrink: 0; }
     .product-name { font-size: .8rem; color: var(--ink); font-weight: 400; flex: 1; }
     .prod-check {
@@ -1289,100 +1302,7 @@
     <div class="tilbod-inner">
       <p class="section-label">Tilboð</p>
       <h2 class="section-title">Viku tilboð</h2>
-      <div class="tilbod-grid">
-
-        <div class="tilbod-card">
-          <div class="tilbod-img">🥛</div>
-          <div class="tilbod-body">
-            <div class="tilbod-name">Mjólk 1L</div>
-            <div class="tilbod-desc">Fersk daglig mjólk</div>
-            <div class="tilbod-pricing">
-              <span class="tilbod-badge">−20%</span>
-              <span class="tilbod-price-new">12 kr</span>
-              <span class="tilbod-price-old">15 kr</span>
-            </div>
-          </div>
-        </div>
-
-        <div class="tilbod-card">
-          <div class="tilbod-img">🍞</div>
-          <div class="tilbod-body">
-            <div class="tilbod-name">Breyð</div>
-            <div class="tilbod-desc">Nýbakt hvardagsbreyð</div>
-            <div class="tilbod-pricing">
-              <span class="tilbod-badge">−15%</span>
-              <span class="tilbod-price-new">17 kr</span>
-              <span class="tilbod-price-old">20 kr</span>
-            </div>
-          </div>
-        </div>
-
-        <div class="tilbod-card">
-          <div class="tilbod-img">🧀</div>
-          <div class="tilbod-body">
-            <div class="tilbod-name">Ostur 400g</div>
-            <div class="tilbod-desc">Føroyskur ostur</div>
-            <div class="tilbod-pricing">
-              <span class="tilbod-badge">−10%</span>
-              <span class="tilbod-price-new">45 kr</span>
-              <span class="tilbod-price-old">50 kr</span>
-            </div>
-          </div>
-        </div>
-
-        <div class="tilbod-card">
-          <div class="tilbod-img">🥚</div>
-          <div class="tilbod-body">
-            <div class="tilbod-name">Egg 12 stk</div>
-            <div class="tilbod-desc">Føroysk frítíðs egg</div>
-            <div class="tilbod-pricing">
-              <span class="tilbod-badge">−15%</span>
-              <span class="tilbod-price-new">34 kr</span>
-              <span class="tilbod-price-old">40 kr</span>
-            </div>
-          </div>
-        </div>
-
-        <div class="tilbod-card">
-          <div class="tilbod-img">🥩</div>
-          <div class="tilbod-body">
-            <div class="tilbod-name">Kjøt 500g</div>
-            <div class="tilbod-desc">Fersk føroyskur lamb</div>
-            <div class="tilbod-pricing">
-              <span class="tilbod-badge">−25%</span>
-              <span class="tilbod-price-new">75 kr</span>
-              <span class="tilbod-price-old">100 kr</span>
-            </div>
-          </div>
-        </div>
-
-        <div class="tilbod-card">
-          <div class="tilbod-img">🧴</div>
-          <div class="tilbod-body">
-            <div class="tilbod-name">Skyr 500g</div>
-            <div class="tilbod-desc">Náttúruligur skyr</div>
-            <div class="tilbod-pricing">
-              <span class="tilbod-badge">−20%</span>
-              <span class="tilbod-price-new">24 kr</span>
-              <span class="tilbod-price-old">30 kr</span>
-            </div>
-          </div>
-        </div>
-
-        <div class="tilbod-card">
-          <div class="tilbod-img">🍎</div>
-          <div class="tilbod-body">
-            <div class="tilbod-name">Eplir 1kg</div>
-            <div class="tilbod-desc">Ferskar eplir</div>
-            <div class="tilbod-pricing">
-              <span class="tilbod-badge">−10%</span>
-              <span class="tilbod-price-new">18 kr</span>
-              <span class="tilbod-price-old">20 kr</span>
-            </div>
-          </div>
-        </div>
-
-      </div>
+      <div class="tilbod-grid" id="tilbod-grid"></div>
     </div>
   </section>
 
@@ -1941,6 +1861,68 @@
     }
 
     /* ── Toggle product chip ── */
+    // ── TILBOÐ DATA ─────────────────────────────
+    // Edit this array to update both the offers page and the order section badges at once
+    const TILBOD = [
+      { emoji:'🥛', name:'Mjólk 1L',   desc:'Fersk daglig mjólk',     pct:20, priceNew:12,  priceOld:15,  orderParent:'Mjólk' },
+      { emoji:'🍞', name:'Breyð',      desc:'Nýbakt hvardagsbreyð',   pct:15, priceNew:17,  priceOld:20,  orderParent:'Breyð' },
+      { emoji:'🧀', name:'Ostur 400g', desc:'Føroyskur ostur',         pct:10, priceNew:45,  priceOld:50,  orderParent:'Ostur' },
+      { emoji:'🥚', name:'Egg 12 stk', desc:'Føroysk frítíðs egg',     pct:15, priceNew:34,  priceOld:40,  orderParent:'Egg',            orderSub:'12 stk' },
+      { emoji:'🥩', name:'Kjøt 500g',  desc:'Fersk føroyskur lamb',    pct:25, priceNew:75,  priceOld:100, orderParent:'Kjøt',           orderSub:'Lambakjøt' },
+      { emoji:'🥣', name:'Skyr 500g',  desc:'Náttúruligur skyr',       pct:20, priceNew:24,  priceOld:30,  orderParent:'Skyr / jogurt',  orderSub:'Náttúruligur skyr' },
+      { emoji:'🍎', name:'Eplir 1kg',  desc:'Ferskar eplir',           pct:10, priceNew:18,  priceOld:20,  orderParent:'Frukt',          orderSub:'Eplir' },
+    ];
+
+    function renderTilbod() {
+      const grid = document.getElementById('tilbod-grid');
+      if (!grid) return;
+      grid.innerHTML = TILBOD.map(t => `
+        <div class="tilbod-card">
+          <div class="tilbod-img">${t.emoji}</div>
+          <div class="tilbod-body">
+            <div class="tilbod-name">${t.name}</div>
+            <div class="tilbod-desc">${t.desc}</div>
+            <div class="tilbod-pricing">
+              <span class="tilbod-badge">−${t.pct}%</span>
+              <span class="tilbod-price-new">${t.priceNew} kr</span>
+              <span class="tilbod-price-old">${t.priceOld} kr</span>
+            </div>
+          </div>
+        </div>`).join('');
+    }
+
+    function applySaleBadges() {
+      // Remove any existing badges first
+      document.querySelectorAll('.order-sale-badge').forEach(b => b.remove());
+
+      TILBOD.forEach(item => {
+        // Badge on parent product button
+        document.querySelectorAll('.product-item').forEach(btn => {
+          const nameEl = btn.querySelector('.product-name');
+          if (!nameEl || nameEl.textContent.trim() !== item.orderParent) return;
+          const badge = document.createElement('span');
+          badge.className = 'order-sale-badge';
+          badge.textContent = `−${item.pct}%`;
+          const anchor = btn.querySelector('.expand-arrow') || btn.querySelector('.prod-check');
+          if (anchor) btn.insertBefore(badge, anchor);
+          else btn.appendChild(badge);
+        });
+
+        // Badge on specific sub-item if defined
+        if (item.orderSub) {
+          document.querySelectorAll('.sub-item').forEach(subBtn => {
+            const text = subBtn.textContent.replace(/[^\w\s\/åæøÅÆØáéíóúýðþÁÉÍÓÚÝÐÞ]/g, '').trim();
+            if (text === item.orderSub) {
+              const badge = document.createElement('span');
+              badge.className = 'order-sale-badge';
+              badge.textContent = `−${item.pct}%`;
+              subBtn.appendChild(badge);
+            }
+          });
+        }
+      });
+    }
+
     function toggleProduct(el) { el.classList.toggle('chosen'); }
 
     function toggleExpand(btn) {
@@ -1995,6 +1977,10 @@
         rows[idx].querySelector('.day').appendChild(s);
       }
     })();
+
+    // Render tilboð cards and sync sale badges on load
+    renderTilbod();
+    applySaleBadges();
 
     /* ── Contact form ── */
     function handleSubmit() {
