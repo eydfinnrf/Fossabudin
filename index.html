@@ -373,12 +373,16 @@
     #orderPage.active { display: block; }
 
     .op-nav {
-      position: sticky; top: 0;
-      background: rgba(247,244,238,.93); backdrop-filter: blur(10px);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: rgba(247,244,238,.97);
+      backdrop-filter: blur(10px);
       border-bottom: 1px solid var(--warm);
-      display: flex; align-items: center; justify-content: center;
-      padding: 1.4rem 5vw; z-index: 10;
-      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 1.4rem 5vw;
     }
     .op-nav .op-back { position: absolute; left: 5vw; }
     .op-nav-logo {
