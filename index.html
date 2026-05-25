@@ -7,6 +7,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet" />
+  <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -2192,13 +2193,66 @@
       setTimeout(() => { modal.style.display = 'none'; }, 350);
     }
 
+    // ── EmailJS credentials — fill these in after setting up emailjs.com ──
+    const EMAILJS_PUBLIC_KEY  = 'YOUR_PUBLIC_KEY';
+    const EMAILJS_SERVICE_ID  = 'YOUR_SERVICE_ID';
+    const EMAILJS_TEMPLATE_ID = 'YOUR_TEMPLATE_ID';
+
+    emailjs.init({ publicKey: EMAILJS_PUBLIC_KEY });
+
     function confirmOrder() {
-      const name = document.getElementById('o-name').value.trim();
-      const label = selectedIsland === 'svinoy' ? 'Svínoy' : 'Fugloy';
-      closeSummary();
-      setTimeout(() => {
-        closeOrderPage();
-      }, 400);
+      const name   = document.getElementById('o-name').value.trim();
+      const phone  = document.getElementById('o-phone').value.trim().replace(/\s+/g, '');
+      const addr   = document.getElementById('o-addr').value.trim();
+      const note   = document.getElementById('o-note').value.trim();
+      const label  = selectedIsland === 'svinoy' ? 'Svínoy' : 'Fugloy';
+
+      // Generate random 5-digit code
+      const code = String(Math.floor(10000 + Math.random() * 90000));
+
+      // Build item list for the email
+      const items = [];
+      document.querySelectorAll('.sub-item.chosen').forEach(btn => {
+        const row = btn.closest('.sub-item-row');
+        const qty = row?.querySelector('.qty-num')?.textContent || '1';
+        const text = btn.textContent.replace(/[−%\d]/g, '').trim();
+        items.push(qty + 'x ' + text);
+      });
+      document.querySelectorAll('.simple-qty-wrap .product-item.chosen').forEach(btn => {
+        const wrap = btn.closest('.simple-qty-wrap');
+        const qty = wrap?.querySelector('.qty-num')?.textContent || '1';
+        const text = btn.querySelector('.product-name')?.textContent.trim();
+        if (text) items.push(qty + 'x ' + text);
+      });
+
+      const templateParams = {
+        to_email : phone + '@gsm.fo',
+        from_name: 'Fossábúðin',
+        customer : name,
+        phone    : phone,
+        address  : addr,
+        island   : label,
+        items    : items.length ? items.join(', ') : 'Ongir vørur valdar',
+        note     : note || '—',
+        code     : code,
+      };
+
+      // Show sending state on confirm button
+      const confirmBtn = document.querySelector('.summary-confirm');
+      confirmBtn.textContent = 'Sending…';
+      confirmBtn.disabled = true;
+
+      emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, templateParams)
+        .then(() => {
+          closeSummary();
+          setTimeout(() => closeOrderPage(), 400);
+        })
+        .catch(err => {
+          console.error('EmailJS error:', err);
+          confirmBtn.textContent = 'Staðfest bílegging ✓';
+          confirmBtn.disabled = false;
+          alert('Tað eydnaðist ikki at senda. Royn aftur ella ring til okkum.');
+        });
     }
 
     /* ── Mark today in hours table ── */
