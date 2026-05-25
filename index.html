@@ -1966,6 +1966,45 @@
     function closeOrderPage() {
       document.getElementById('orderPage').classList.remove('active');
       document.body.style.overflow = '';
+      resetOrderForm();
+    }
+
+    function resetOrderForm() {
+      // Clear text inputs
+      ['o-name','o-phone','o-addr','o-note'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.value = '';
+      });
+
+      // Reset island selection
+      selectedIsland = null;
+      const wrap = document.getElementById('islandChoicesWrap');
+      if (wrap) wrap.classList.remove('open');
+      const trigger = document.getElementById('islandTrigger');
+      if (trigger) trigger.classList.remove('chosen');
+      const label = document.getElementById('triggerLabel');
+      if (label) label.textContent = 'Vel oyggj';
+      const formLabel = document.getElementById('formDestLabel');
+      if (formLabel) formLabel.textContent = '—';
+      const step2 = document.getElementById('orderStep2');
+      if (step2) step2.style.display = 'none';
+
+      // Unselect all product items
+      document.querySelectorAll('.product-item.chosen').forEach(btn => btn.classList.remove('chosen'));
+      document.querySelectorAll('.sub-item.chosen').forEach(btn => btn.classList.remove('chosen'));
+
+      // Hide all qty controls and reset to 1
+      document.querySelectorAll('.qty-control').forEach(qc => {
+        qc.classList.add('hidden');
+        const num = qc.querySelector('.qty-num');
+        if (num) num.textContent = '1';
+      });
+
+      // Collapse all expanded panels
+      document.querySelectorAll('.expandable-wrap.open').forEach(w => w.classList.remove('open'));
+
+      // Scroll order page back to top
+      document.getElementById('orderPage').scrollTop = 0;
     }
 
     /* ── Toggle the island dropdown ── */
