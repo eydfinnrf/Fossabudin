@@ -617,6 +617,142 @@
       font-weight: 500;
     }
 
+    /* ── ORDER SUMMARY MODAL ───────────────────── */
+    #orderSummary {
+      display: none;
+      position: fixed;
+      inset: 0;
+      z-index: 300;
+      background: rgba(42,34,26,0.45);
+      backdrop-filter: blur(4px);
+      align-items: flex-end;
+      justify-content: center;
+    }
+    #orderSummary.active {
+      display: flex;
+    }
+    .summary-sheet {
+      background: var(--cream);
+      width: 100%;
+      max-width: 560px;
+      border-radius: 16px 16px 0 0;
+      padding: 2rem 1.8rem 2.4rem;
+      max-height: 85vh;
+      overflow-y: auto;
+      transform: translateY(100%);
+      transition: transform .35s cubic-bezier(.25,.8,.25,1);
+    }
+    #orderSummary.active .summary-sheet {
+      transform: translateY(0);
+    }
+    .summary-handle {
+      width: 40px; height: 4px;
+      background: var(--stone);
+      border-radius: 4px;
+      margin: 0 auto 1.5rem;
+    }
+    .summary-title {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.3rem;
+      font-weight: 600;
+      color: var(--ink);
+      margin-bottom: .3rem;
+    }
+    .summary-dest {
+      font-size: .82rem;
+      color: var(--bark);
+      margin-bottom: 1.4rem;
+      font-weight: 400;
+    }
+    .summary-section-label {
+      font-size: .7rem;
+      font-weight: 500;
+      letter-spacing: .1em;
+      text-transform: uppercase;
+      color: var(--stone);
+      margin-bottom: .6rem;
+    }
+    .summary-info {
+      background: var(--warm);
+      border-radius: 8px;
+      padding: .8rem 1rem;
+      margin-bottom: 1.2rem;
+      font-size: .88rem;
+      color: var(--ink);
+      display: flex;
+      flex-direction: column;
+      gap: .3rem;
+    }
+    .summary-info span { color: var(--bark); }
+    .summary-items {
+      margin-bottom: 1.5rem;
+    }
+    .summary-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: .55rem 0;
+      border-bottom: 1px solid var(--warm);
+      font-size: .88rem;
+      color: var(--ink);
+    }
+    .summary-item:last-child { border-bottom: none; }
+    .summary-item-qty {
+      font-size: .78rem;
+      color: var(--stone);
+      background: var(--warm);
+      padding: .15rem .5rem;
+      border-radius: 20px;
+      flex-shrink: 0;
+    }
+    .summary-empty {
+      font-size: .85rem;
+      color: var(--stone);
+      font-style: italic;
+      padding: .5rem 0;
+    }
+    .summary-note {
+      font-size: .82rem;
+      color: var(--bark);
+      background: var(--warm);
+      border-radius: 8px;
+      padding: .7rem .9rem;
+      margin-bottom: 1.5rem;
+    }
+    .summary-actions {
+      display: flex;
+      gap: .8rem;
+      flex-direction: column;
+    }
+    .summary-confirm {
+      width: 100%;
+      padding: 1rem;
+      background: var(--green);
+      color: #fff;
+      border: none;
+      border-radius: var(--radius);
+      font-family: inherit;
+      font-size: .95rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: background .2s;
+    }
+    .summary-confirm:hover { background: #3a5332; }
+    .summary-cancel {
+      width: 100%;
+      padding: .8rem;
+      background: none;
+      color: var(--bark);
+      border: 1.5px solid var(--stone);
+      border-radius: var(--radius);
+      font-family: inherit;
+      font-size: .88rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: border-color .2s;
+    }
+    .summary-cancel:hover { border-color: var(--bark); }
+
     .order-sale-badge {
       font-size: .62rem;
       font-weight: 700;
@@ -1957,15 +2093,73 @@
       numEl.textContent = val;
     }
 
-    /* ── Submit order ── */
+    /* ── Submit order — show summary first ── */
     function submitOrder() {
       const name = document.getElementById('o-name').value.trim();
+      const phone = document.getElementById('o-phone').value.trim();
       const addr = document.getElementById('o-addr').value.trim();
       if (!name) { alert('Vinarliga skriva títt navn.'); return; }
       if (!addr) { alert('Vinarliga skriva tína adressa.'); return; }
+
       const label = selectedIsland === 'svinoy' ? 'Svínoy' : 'Fugloy';
-      alert('Takk, ' + name + '! Tín paning til ' + label + ' er móttøkin. Vit taka samband við teg um fráfarartíðina. 🙏');
-      closeOrderPage();
+
+      // Collect chosen items
+      const items = [];
+      // Sub-items with qty
+      document.querySelectorAll('.sub-item.chosen').forEach(btn => {
+        const row = btn.closest('.sub-item-row');
+        const qty = row ? row.querySelector('.qty-num')?.textContent : '1';
+        const text = btn.textContent.replace(/[−%\d]/g, '').trim();
+        items.push({ name: text, qty: qty || '1' });
+      });
+      // Simple items with qty
+      document.querySelectorAll('.simple-qty-wrap .product-item.chosen').forEach(btn => {
+        const wrap = btn.closest('.simple-qty-wrap');
+        const qty = wrap ? wrap.querySelector('.qty-num')?.textContent : '1';
+        const text = btn.querySelector('.product-name')?.textContent.trim();
+        if (text) items.push({ name: text, qty: qty || '1' });
+      });
+
+      const note = document.getElementById('o-note').value.trim();
+
+      // Populate summary modal
+      document.getElementById('sum-name').textContent = name;
+      document.getElementById('sum-phone').textContent = phone || '—';
+      document.getElementById('sum-addr').textContent = addr;
+      document.getElementById('sum-dest').textContent = label;
+
+      const list = document.getElementById('sum-items');
+      list.innerHTML = items.length
+        ? items.map(i => `<div class="summary-item"><span>${i.name}</span><span class="summary-item-qty">${i.qty} stk</span></div>`).join('')
+        : '<p class="summary-empty">Ongir vørur valdar.</p>';
+
+      const noteBox = document.getElementById('sum-note-wrap');
+      if (note) {
+        document.getElementById('sum-note').textContent = note;
+        noteBox.style.display = 'block';
+      } else {
+        noteBox.style.display = 'none';
+      }
+
+      // Show modal
+      const modal = document.getElementById('orderSummary');
+      modal.style.display = 'flex';
+      requestAnimationFrame(() => modal.classList.add('active'));
+    }
+
+    function closeSummary() {
+      const modal = document.getElementById('orderSummary');
+      modal.classList.remove('active');
+      setTimeout(() => { modal.style.display = 'none'; }, 350);
+    }
+
+    function confirmOrder() {
+      const name = document.getElementById('o-name').value.trim();
+      const label = selectedIsland === 'svinoy' ? 'Svínoy' : 'Fugloy';
+      closeSummary();
+      setTimeout(() => {
+        closeOrderPage();
+      }, 400);
     }
 
     /* ── Mark today in hours table ── */
@@ -1995,6 +2189,36 @@
       alert('Takk, ' + name + '! Vit svara tær so skjótt vit kunnu. 🙏');
     }
   </script>
+
+  <!-- ORDER SUMMARY MODAL -->
+  <div id="orderSummary" onclick="if(event.target===this)closeSummary()">
+    <div class="summary-sheet">
+      <div class="summary-handle"></div>
+      <div class="summary-title">Staðfest bílegging</div>
+      <p class="summary-dest">Til <strong id="sum-dest"></strong></p>
+
+      <p class="summary-section-label">Tínar upplýsingar</p>
+      <div class="summary-info">
+        <div><strong>Navn:</strong> <span id="sum-name"></span></div>
+        <div><strong>Telefon:</strong> <span id="sum-phone"></span></div>
+        <div><strong>Adressa:</strong> <span id="sum-addr"></span></div>
+      </div>
+
+      <p class="summary-section-label">Vørur</p>
+      <div class="summary-items" id="sum-items"></div>
+
+      <div id="sum-note-wrap" style="display:none;">
+        <p class="summary-section-label">Viðmerking</p>
+        <div class="summary-note" id="sum-note"></div>
+      </div>
+
+      <div class="summary-actions">
+        <button class="summary-confirm" onclick="confirmOrder()">Staðfest bílegging ✓</button>
+        <button class="summary-cancel" onclick="closeSummary()">Aftur til bíleggingina</button>
+      </div>
+    </div>
+  </div>
+
 </body>
 </html>
 
