@@ -2224,6 +2224,7 @@
         const text = btn.querySelector('.product-name')?.textContent.trim();
         if (text) items.push(qty + 'x ' + text);
       });
+      const itemsList = items.length ? items.join('\n') : 'Ongir vørur valdar';
 
       const templateParams = {
         to_email : phone + '@gsm.fo',
@@ -2232,7 +2233,7 @@
         phone    : phone,
         address  : addr,
         island   : label,
-        items    : items.length ? items.join(', ') : 'Ongir vørur valdar',
+        items    : itemsList,
         note     : note || '—',
         code     : code,
       };
