@@ -1558,17 +1558,9 @@
       <h2 class="section-title">Bílegg vørur</h2>
     </div>
 
-    <!-- Single trigger button -->
-    <button class="island-trigger" id="islandTrigger" onclick="toggleIslandChoices()">
-      <div>
-        <div class="island-trigger-label" id="triggerLabel">Vel oyggj</div>
-        <div class="island-trigger-sub" id="triggerSub">Svínoy ella Fugloy</div>
-      </div>
-      <span class="island-trigger-chevron">›</span>
-    </button>
-
-    <!-- Slide-down: the two island options -->
-    <div class="island-choices-wrap" id="islandChoicesWrap">
+    <!-- Island options — always visible -->
+    <p class="prod-cat-label" style="margin:1.2rem 5vw .6rem">Vel oyggj</p>
+    <div class="island-choices-wrap open" id="islandChoicesWrap">
       <div class="island-choices">
         <button class="island-choice" id="choice-svinoy" onclick="selectIsland('svinoy')">
           <span class="island-choice-icon">⛵</span>
@@ -1676,8 +1668,6 @@
       document.getElementById('islandChoicesWrap').classList.remove('open');
       document.getElementById('islandTrigger').classList.remove('open');
       document.getElementById('orderFormWrap').classList.remove('open');
-      document.getElementById('triggerLabel').textContent = 'Vel oyggj';
-      document.getElementById('triggerSub').textContent = 'Svínoy ella Fugloy';
       ['svinoy','fugloy'].forEach(id => document.getElementById('choice-' + id).classList.remove('selected'));
       selectedIsland = null;
     }
@@ -1696,12 +1686,10 @@
 
       // Reset island selection
       selectedIsland = null;
-      const wrap = document.getElementById('islandChoicesWrap');
-      if (wrap) wrap.classList.remove('open');
-      const trigger = document.getElementById('islandTrigger');
-      if (trigger) trigger.classList.remove('chosen');
-      const label = document.getElementById('triggerLabel');
-      if (label) label.textContent = 'Vel oyggj';
+      ['svinoy','fugloy'].forEach(id => {
+        const el = document.getElementById('choice-' + id);
+        if (el) el.classList.remove('selected');
+      });
       const formLabel = document.getElementById('formDestLabel');
       if (formLabel) formLabel.textContent = '—';
       const step2 = document.getElementById('orderStep2');
@@ -1728,14 +1716,6 @@
     /* ── Toggle the island dropdown ── */
     let selectedIsland = null;
 
-    function toggleIslandChoices() {
-      const wrap = document.getElementById('islandChoicesWrap');
-      const trigger = document.getElementById('islandTrigger');
-      const isOpen = wrap.classList.contains('open');
-      wrap.classList.toggle('open', !isOpen);
-      trigger.classList.toggle('open', !isOpen);
-    }
-
     /* ── Select an island ── */
     function selectIsland(id) {
       selectedIsland = id;
@@ -1746,11 +1726,7 @@
       ['svinoy','fugloy'].forEach(c => document.getElementById('choice-' + c).classList.remove('selected'));
       document.getElementById('choice-' + id).classList.add('selected');
 
-      // Update trigger label & close dropdown
-      document.getElementById('triggerLabel').textContent = labels[id];
-      document.getElementById('triggerSub').textContent = hints[id];
-      document.getElementById('islandChoicesWrap').classList.remove('open');
-      document.getElementById('islandTrigger').classList.remove('open');
+      // Keep choices visible (always open)
 
       // Update form destination label & open form
       document.getElementById('formDestLabel').textContent = labels[id];
