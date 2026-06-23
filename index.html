@@ -546,15 +546,7 @@
       max-height: 400px;
       margin-top: .4rem;
     }
-    .prod-thumb {
-      height: 52px;
-      width: auto;
-      object-fit: contain;
-      border-radius: 4px;
-      flex-shrink: 0;
-      drop-shadow: 0 1px 3px rgba(0,0,0,.15);
-    }
-    .sub-item {
+.sub-item {
       display: flex;
       align-items: center;
       gap: .6rem;
@@ -1634,19 +1626,19 @@
                 <button class="product-item" onclick="toggleExpand(this)"><span class="product-emoji">🥛</span><span class="product-name">Mjólk</span><span class="expand-arrow">›</span></button>
                 <div class="sub-panel">
                   <div class="sub-item-row">
-                    <button class="sub-item" onclick="toggleSubItem(this)"><span class="sub-dot"></span><img src="mjolk-bla.png" alt="" class="prod-thumb">Bónda mjólk - 3,5%</button>
+                    <button class="sub-item" onclick="toggleSubItem(this)"><span class="sub-dot"></span>Bónda mjólk - 3,5%</button>
                     <div class="qty-control hidden"><button class="qty-btn" onclick="changeQty(this,-1)">−</button><span class="qty-num">1</span><button class="qty-btn" onclick="changeQty(this,1)">+</button></div>
                   </div>
                   <div class="sub-item-row">
-                    <button class="sub-item" onclick="toggleSubItem(this)"><span class="sub-dot"></span><img src="mjolk-reyd.png" alt="" class="prod-thumb">Millum mjólk - 1,5%</button>
+                    <button class="sub-item" onclick="toggleSubItem(this)"><span class="sub-dot"></span>Millum mjólk - 1,5%</button>
                     <div class="qty-control hidden"><button class="qty-btn" onclick="changeQty(this,-1)">−</button><span class="qty-num">1</span><button class="qty-btn" onclick="changeQty(this,1)">+</button></div>
                   </div>
                   <div class="sub-item-row">
-                    <button class="sub-item" onclick="toggleSubItem(this)"><span class="sub-dot"></span><img src="mjolk-gul.png" alt="" class="prod-thumb">Lætti mjólk - 0,5%</button>
+                    <button class="sub-item" onclick="toggleSubItem(this)"><span class="sub-dot"></span>Lætti mjólk - 0,5%</button>
                     <div class="qty-control hidden"><button class="qty-btn" onclick="changeQty(this,-1)">−</button><span class="qty-num">1</span><button class="qty-btn" onclick="changeQty(this,1)">+</button></div>
                   </div>
                   <div class="sub-item-row">
-                    <button class="sub-item" onclick="toggleSubItem(this)"><span class="sub-dot"></span><img src="mjolk-gron.png" alt="" class="prod-thumb">Solti mjólk - 0,1%</button>
+                    <button class="sub-item" onclick="toggleSubItem(this)"><span class="sub-dot"></span>Solti mjólk - 0,1%</button>
                     <div class="qty-control hidden"><button class="qty-btn" onclick="changeQty(this,-1)">−</button><span class="qty-num">1</span><button class="qty-btn" onclick="changeQty(this,1)">+</button></div>
                   </div>
                 </div>
