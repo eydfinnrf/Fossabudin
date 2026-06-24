@@ -437,13 +437,10 @@
     }
     .island-trigger.open .island-trigger-chevron { transform: rotate(90deg); color: var(--green); }
 
-    /* Slide-down: Svínoy + Fugloy pill options */
+    /* Island options — always visible */
     .island-choices-wrap {
-      max-height: 0; overflow: hidden;
-      transition: max-height .4s cubic-bezier(.4,0,.2,1);
       max-width: 480px; margin: 0 auto;
     }
-    .island-choices-wrap.open { max-height: 300px; }
     .island-choices {
       display: flex; flex-direction: column; gap: .5rem;
       padding: .5rem 5vw 0;
@@ -1559,8 +1556,8 @@
     </div>
 
     <!-- Island options — always visible -->
-    <p class="prod-cat-label" style="margin:1.2rem 5vw .6rem">Vel oyggj</p>
-    <div class="island-choices-wrap open" id="islandChoicesWrap">
+    <p class="island-trigger-label" style="max-width:480px;margin:1.8rem auto .2rem;padding:0 5vw;font-family:'Playfair Display',serif;font-size:1rem;font-weight:600;color:var(--ink);">Vel oyggj</p>
+    <div class="island-choices-wrap" id="islandChoicesWrap">
       <div class="island-choices">
         <button class="island-choice" id="choice-svinoy" onclick="selectIsland('svinoy')">
           <span class="island-choice-icon">⛵</span>
