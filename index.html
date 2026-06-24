@@ -1553,17 +1553,15 @@
     <div class="op-step1">
       <p class="section-label">Bílegging</p>
       <h2 class="section-title">Bílegg vørur</h2>
-    </div>
 
-    <!-- "Vel oyggj" — display only, not clickable -->
-    <div style="max-width:480px;margin:1.8rem auto 0;padding:0 5vw;">
-      <div style="background:#fff;border:1.5px solid var(--warm);border-radius:10px;padding:1rem 1.4rem;text-align:center;">
+      <!-- "Vel oyggj" — display card, not clickable -->
+      <div style="background:#fff;border:1.5px solid var(--warm);border-radius:10px;padding:1rem 1.4rem;margin-top:1.8rem;">
         <div style="font-family:'Playfair Display',serif;font-size:1rem;font-weight:600;color:var(--ink);">Vel oyggj</div>
         <div style="font-size:.73rem;color:var(--bark);font-weight:300;margin-top:.2rem;">Svínoy ella Fugloy</div>
       </div>
-    </div>
-    <div class="island-choices-wrap" id="islandChoicesWrap">
-      <div class="island-choices">
+
+      <!-- Island choices — always visible -->
+      <div id="islandChoicesWrap" style="display:flex;flex-direction:column;gap:.5rem;margin-top:.5rem;">
         <button class="island-choice" id="choice-svinoy" onclick="selectIsland('svinoy')">
           <span class="island-choice-icon">⛵</span>
           <div>
