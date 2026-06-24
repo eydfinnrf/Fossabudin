@@ -1554,13 +1554,13 @@
       <p class="section-label">Bílegging</p>
       <h2 class="section-title">Bílegg vørur</h2>
 
-      <!-- "Vel oyggj" — display card, not clickable -->
-      <div style="background:#fff;border:1.5px solid var(--warm);border-radius:10px;padding:1rem 1.4rem;margin-top:1.8rem;">
-        <div style="font-family:'Playfair Display',serif;font-size:1rem;font-weight:600;color:var(--ink);">Vel oyggj</div>
-        <div style="font-size:.73rem;color:var(--bark);font-weight:300;margin-top:.2rem;">Svínoy ella Fugloy</div>
+      <!-- "Vel oyggj" — display label, not clickable -->
+      <div style="background:#fff;border:1.5px solid var(--warm);border-radius:10px;padding:1rem 1.4rem;margin-top:1.8rem;text-align:left;">
+        <div style="font-family:'Playfair Display',serif;font-size:1rem;font-weight:600;color:var(--ink);text-transform:none;letter-spacing:normal;">Vel oyggj</div>
+        <div style="font-size:.73rem;color:var(--bark);font-weight:300;margin-top:.05rem;text-transform:none;letter-spacing:normal;">Svínoy ella Fugloy</div>
       </div>
 
-      <!-- Island choices — always visible -->
+      <!-- Island choices — always visible, never hidden by JS -->
       <div id="islandChoicesWrap" style="display:flex;flex-direction:column;gap:.5rem;margin-top:.5rem;text-align:left;">
         <button class="island-choice" id="choice-svinoy" onclick="selectIsland('svinoy')">
           <span class="island-choice-icon">⛵</span>
