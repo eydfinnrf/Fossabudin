@@ -1561,7 +1561,7 @@
       </div>
 
       <!-- Island choices — always visible -->
-      <div id="islandChoicesWrap" style="display:flex;flex-direction:column;gap:.5rem;margin-top:.5rem;">
+      <div id="islandChoicesWrap" style="display:flex;flex-direction:column;gap:.5rem;margin-top:.5rem;text-align:left;">
         <button class="island-choice" id="choice-svinoy" onclick="selectIsland('svinoy')">
           <span class="island-choice-icon">⛵</span>
           <div>
@@ -1665,8 +1665,6 @@
       document.body.style.overflow = 'hidden';
       document.getElementById('orderPage').scrollTop = 0;
       // reset
-      document.getElementById('islandChoicesWrap').classList.remove('open');
-      document.getElementById('islandTrigger').classList.remove('open');
       document.getElementById('orderFormWrap').classList.remove('open');
       ['svinoy','fugloy'].forEach(id => document.getElementById('choice-' + id).classList.remove('selected'));
       selectedIsland = null;
