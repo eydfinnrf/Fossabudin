@@ -1427,10 +1427,7 @@
             <td>09:00 – 19:00</td>
           </tr>
           <tr>
-            <td class="day">
-              Leygardagur
-              <span class="today-tag" id="todayTag"></span>
-            </td>
+            <td class="day">Leygardagur</td>
             <td>09:00 – 19:00</td>
           </tr>
           <tr>
@@ -2108,13 +2105,10 @@
 
     /* ── Mark today in hours table ── */
     (function() {
-      const day  = new Date().getDay();
-      const tag  = document.getElementById('todayTag');
-      if (!tag) return;
-      const rows = document.querySelectorAll('.hours-table tr');
-      const map  = {1:0,2:1,3:2,4:3,5:4,6:5,0:6};
-      tag.parentNode.removeChild(tag);
+      const day = new Date().getDay(); // 0=Sun,1=Mon,...,6=Sat
+      const map = {1:0,2:1,3:2,4:3,5:4,6:5,0:6};
       const idx = map[day];
+      const rows = document.querySelectorAll('.hours-table tr');
       if (idx !== undefined && rows[idx]) {
         const s = document.createElement('span');
         s.className = 'today-tag'; s.textContent = 'Í dag';
