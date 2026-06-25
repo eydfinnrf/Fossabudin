@@ -368,10 +368,17 @@
 
     /* ── ORDER PAGE (full-screen overlay) ─────── */
     #orderPage {
-      display: none; position: fixed; inset: 0;
+      position: fixed; inset: 0;
       z-index: 200; background: var(--cream); overflow-y: auto;
+      visibility: hidden; pointer-events: none;
+      transform: translateX(100%);
+      transition: transform .35s cubic-bezier(.4,0,.2,1), visibility 0s linear .35s;
     }
-    #orderPage.active { display: block; }
+    #orderPage.active {
+      visibility: visible; pointer-events: auto;
+      transform: translateX(0);
+      transition: transform .35s cubic-bezier(.4,0,.2,1), visibility 0s linear 0s;
+    }
 
     .op-nav {
       position: sticky;
@@ -2129,6 +2136,39 @@
       if (!name) { alert('Vinarliga skriva títt navn.'); return; }
       alert('Takk, ' + name + '! Vit svara tær so skjótt vit kunnu. 🙏');
     }
+
+    // ── Swipe / trackpad navigation ──────────────────────────────
+    (function () {
+      var tx = 0, ty = 0;
+
+      document.addEventListener('touchstart', function (e) {
+        tx = e.touches[0].clientX;
+        ty = e.touches[0].clientY;
+      }, { passive: true });
+
+      document.addEventListener('touchend', function (e) {
+        var dx = e.changedTouches[0].clientX - tx;
+        var dy = e.changedTouches[0].clientY - ty;
+        if (Math.abs(dx) < 60 || Math.abs(dx) < Math.abs(dy)) return;
+        var open = document.getElementById('orderPage').classList.contains('active');
+        if (dx > 0 && open)  closeOrderPage();
+        if (dx < 0 && !open) openOrderPage();
+      }, { passive: true });
+
+      // Two-finger trackpad horizontal swipe
+      var wdx = 0, wt = null;
+      document.addEventListener('wheel', function (e) {
+        if (Math.abs(e.deltaX) <= Math.abs(e.deltaY)) return;
+        wdx += e.deltaX;
+        clearTimeout(wt);
+        wt = setTimeout(function () {
+          var open = document.getElementById('orderPage').classList.contains('active');
+          if (wdx > 120 && open)  closeOrderPage();
+          if (wdx < -120 && !open) openOrderPage();
+          wdx = 0;
+        }, 80);
+      }, { passive: true });
+    })();
   </script>
 
   <!-- ORDER SUMMARY MODAL -->
