@@ -1,0 +1,9 @@
+{
+  "name": "fossabudin",
+  "version": "1.0.0",
+  "description": "Fossábúðin - Order management system",
+  "main": "index.html",
+  "dependencies": {
+    "twilio": "^4.10.0"
+  }
+}
