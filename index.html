@@ -3730,6 +3730,14 @@
       numEl.textContent = val;
     }
 
+    /* Read a chosen item's clean name — keeps sizes like (1,5L),
+       strips only the sale badge and the leading dot span. */
+    function cleanItemName(btn) {
+      const c = btn.cloneNode(true);
+      c.querySelectorAll('.order-sale-badge, .sub-dot').forEach(e => e.remove());
+      return c.textContent.trim();
+    }
+
     /* ── Submit order — show summary first ── */
     function submitOrder() {
       const name = document.getElementById('o-name').value.trim();
@@ -3746,7 +3754,7 @@
       document.querySelectorAll('.sub-item.chosen').forEach(btn => {
         const row = btn.closest('.sub-item-row');
         const qty = row ? row.querySelector('.qty-num')?.textContent : '1';
-        const text = btn.textContent.replace(/[−%\d]/g, '').trim();
+        const text = cleanItemName(btn);
         items.push({ name: text, qty: qty || '1' });
       });
       // Simple items with qty
@@ -3818,7 +3826,7 @@
       document.querySelectorAll('.sub-item.chosen').forEach(btn => {
         const row = btn.closest('.sub-item-row');
         const qty = row?.querySelector('.qty-num')?.textContent || '1';
-        const text = btn.textContent.replace(/[−%\d]/g, '').trim();
+        const text = cleanItemName(btn);
         items.push(qty + 'x ' + text);
       });
       document.querySelectorAll('.simple-qty-wrap .product-item.chosen').forEach(btn => {
