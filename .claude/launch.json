@@ -1,0 +1,12 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "fossabudin",
+      "runtimeExecutable": "bash",
+      "runtimeArgs": ["-c", "cd /Users/eydfinn/Documents/Fossabudin && ruby -run -e httpd . -p $PORT"],
+      "port": 3456,
+      "autoPort": true
+    }
+  ]
+}
