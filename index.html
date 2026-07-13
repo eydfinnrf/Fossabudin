@@ -800,6 +800,102 @@
       padding-top: 1rem;
     }
 
+    /* Product search box */
+    .prod-search-wrap { position: relative; margin-bottom: 1.1rem; }
+    .prod-search {
+      width: 100%; font-family: inherit; font-size: .9rem;
+      color: var(--ink); background: var(--cream);
+      border: 1.5px solid var(--warm); border-radius: 8px;
+      padding: .7rem .9rem .7rem 2.2rem;
+      transition: border-color .15s;
+    }
+    .prod-search:focus { outline: none; border-color: var(--green); }
+    .prod-search::placeholder { color: var(--stone); }
+    .prod-search-icon {
+      position: absolute; left: .8rem; top: 50%; transform: translateY(-50%);
+      font-size: .9rem; color: var(--stone); pointer-events: none;
+    }
+    .prod-search-clear {
+      position: absolute; right: .5rem; top: 50%; transform: translateY(-50%);
+      background: none; border: none; cursor: pointer; font-family: inherit;
+      font-size: 1.1rem; color: var(--stone); padding: .2rem .5rem; line-height: 1;
+      display: none;
+    }
+    .prod-search-clear.show { display: block; }
+    .prod-noresults {
+      display: none; text-align: center; color: var(--bark);
+      font-size: .85rem; padding: 1.2rem 0;
+    }
+    .prod-noresults.show { display: block; }
+
+    /* Live basket counter on submit button */
+    .basket-count {
+      display: flex; align-items: center; justify-content: center; gap: .5rem;
+      font-size: .82rem; color: var(--bark); font-weight: 500;
+      margin-bottom: .7rem; min-height: 1.2rem;
+    }
+    .basket-count-badge {
+      background: var(--green); color: #fff;
+      border-radius: 20px; padding: .1rem .55rem;
+      font-size: .78rem; font-weight: 700;
+    }
+    .basket-count.empty { color: var(--stone); }
+
+    /* Confirmation screen */
+    #orderConfirm {
+      position: fixed; inset: 0; z-index: 300;
+      background: rgba(42,34,26,.5);
+      display: none; align-items: center; justify-content: center;
+      padding: 5vw;
+    }
+    #orderConfirm.active { display: flex; }
+    .confirm-card {
+      background: var(--cream); border-radius: 16px;
+      max-width: 420px; width: 100%;
+      padding: 2.5rem 2rem; text-align: center;
+      box-shadow: 0 20px 60px rgba(42,34,26,.25);
+      transform: scale(.94); opacity: 0;
+      transition: transform .3s cubic-bezier(.4,0,.2,1), opacity .3s;
+    }
+    #orderConfirm.active .confirm-card { transform: scale(1); opacity: 1; }
+    .confirm-check {
+      width: 64px; height: 64px; border-radius: 50%;
+      background: var(--green); color: #fff;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.9rem; margin: 0 auto 1.3rem;
+      animation: confirmPop .45s cubic-bezier(.34,1.56,.64,1) both;
+    }
+    @keyframes confirmPop { 0% { transform: scale(0); } 100% { transform: scale(1); } }
+    .confirm-title {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.7rem; font-weight: 600; color: var(--ink);
+      margin-bottom: .5rem;
+    }
+    .confirm-text {
+      font-size: .9rem; color: var(--bark); line-height: 1.6;
+      max-width: 30ch; margin: 0 auto 1.5rem;
+    }
+    .confirm-code-box {
+      background: var(--green-lt); border: 1px solid var(--stone);
+      border-radius: 10px; padding: 1rem; margin-bottom: 1.6rem;
+    }
+    .confirm-code-label {
+      font-size: .68rem; letter-spacing: .16em; text-transform: uppercase;
+      color: var(--green); font-weight: 500; margin-bottom: .3rem;
+    }
+    .confirm-code {
+      font-family: 'Playfair Display', serif;
+      font-size: 2rem; font-weight: 600; color: var(--ink);
+      letter-spacing: .3em;
+    }
+    .confirm-close {
+      width: 100%; padding: .95rem; background: var(--green);
+      color: #fff; border: none; border-radius: var(--radius);
+      font-family: inherit; font-size: .9rem; font-weight: 500;
+      letter-spacing: .04em; cursor: pointer; transition: background .2s;
+    }
+    .confirm-close:hover { background: #3a5332; }
+
     /* ── UPPLATINGARTÍÐIR (Opening Hours) ────── */
     #tiding {
       background: var(--green-lt);
@@ -1588,6 +1684,13 @@
         <!-- Products by category -->
         <div class="form-box">
           <p class="form-box-title">Vel vørur</p>
+
+          <div class="prod-search-wrap">
+            <span class="prod-search-icon">🔍</span>
+            <input type="text" id="prodSearch" class="prod-search" placeholder="Leita eftir vøru…" oninput="filterProducts()" autocomplete="off" />
+            <button type="button" class="prod-search-clear" id="prodSearchClear" onclick="clearProductSearch()" aria-label="Rudda leiting">×</button>
+          </div>
+          <p class="prod-noresults" id="prodNoResults">Ongar vørur funnar.</p>
 
           <!-- MJÓLK -->
           <div class="prod-category">
@@ -3552,6 +3655,7 @@
           </div>
         </div>
 
+        <div class="basket-count empty" id="basketCount">Ongar vørur valdar enn</div>
         <button class="op-submit" onclick="submitOrder()">Víðari til bílegging →</button>
 
         <p class="op-thankyou">Takk fyri tína bílegging. Tú fært eini SMS, tá ið tín bílegging er send.</p>
@@ -3574,6 +3678,9 @@
       document.getElementById('orderFormWrap').classList.remove('open');
       ['svinoy','fugloy'].forEach(id => document.getElementById('choice-' + id).classList.remove('selected'));
       selectedIsland = null;
+      // Restore any half-built basket from a previous visit
+      loadBasket();
+      updateBasketCount();
     }
     function closeOrderPage() {
       document.getElementById('orderPage').classList.remove('active');
@@ -3715,12 +3822,14 @@
       const wrap = btn.closest('.expandable-wrap');
       const anyChosen = wrap.querySelectorAll('.sub-item.chosen').length > 0;
       wrap.querySelector('.product-item').classList.toggle('chosen', anyChosen);
+      onBasketChange();
     }
 
     function toggleSimple(btn) {
       btn.classList.toggle('chosen');
       const wrap = btn.closest('.simple-qty-wrap');
       wrap.querySelector('.qty-control').classList.toggle('hidden', !btn.classList.contains('chosen'));
+      onBasketChange();
     }
 
     function changeQty(btn, delta) {
@@ -3728,6 +3837,133 @@
       let val = parseInt(numEl.textContent) + delta;
       if (val < 1) val = 1;
       numEl.textContent = val;
+      onBasketChange();
+    }
+
+    /* ── Live basket counter + localStorage persistence ── */
+    const BASKET_KEY = 'fossabudin-basket';
+
+    // Assign a stable id to every sub-item so we can save/restore selections
+    (function assignProductIds() {
+      document.querySelectorAll('.sub-item').forEach((btn, i) => { btn.dataset.pid = 'p' + i; });
+    })();
+
+    function countBasket() {
+      let n = 0;
+      document.querySelectorAll('.sub-item.chosen').forEach(btn => {
+        const qty = parseInt(btn.closest('.sub-item-row')?.querySelector('.qty-num')?.textContent) || 1;
+        n += qty;
+      });
+      document.querySelectorAll('.simple-qty-wrap .product-item.chosen').forEach(btn => {
+        const qty = parseInt(btn.closest('.simple-qty-wrap')?.querySelector('.qty-num')?.textContent) || 1;
+        n += qty;
+      });
+      return n;
+    }
+
+    function updateBasketCount() {
+      const el = document.getElementById('basketCount');
+      if (!el) return;
+      const n = countBasket();
+      if (n === 0) {
+        el.classList.add('empty');
+        el.textContent = 'Ongar vørur valdar enn';
+      } else {
+        el.classList.remove('empty');
+        const word = n === 1 ? 'vøra vald' : 'vørur valdar';
+        el.innerHTML = '<span class="basket-count-badge">' + n + '</span> ' + word;
+      }
+    }
+
+    function saveBasket() {
+      const items = {};
+      document.querySelectorAll('.sub-item.chosen').forEach(btn => {
+        const qty = parseInt(btn.closest('.sub-item-row')?.querySelector('.qty-num')?.textContent) || 1;
+        items[btn.dataset.pid] = qty;
+      });
+      const data = {
+        items,
+        name: document.getElementById('o-name')?.value || '',
+        phone: document.getElementById('o-phone')?.value || '',
+        addr: document.getElementById('o-addr')?.value || '',
+        note: document.getElementById('o-note')?.value || '',
+      };
+      try { localStorage.setItem(BASKET_KEY, JSON.stringify(data)); } catch (e) {}
+    }
+
+    function loadBasket() {
+      let data;
+      try { data = JSON.parse(localStorage.getItem(BASKET_KEY)); } catch (e) { return; }
+      if (!data) return;
+
+      // Restore contact fields
+      if (data.name)  { const el = document.getElementById('o-name');  if (el) el.value = data.name; }
+      if (data.phone) { const el = document.getElementById('o-phone'); if (el) el.value = data.phone; }
+      if (data.addr)  { const el = document.getElementById('o-addr');  if (el) el.value = data.addr; }
+      if (data.note)  { const el = document.getElementById('o-note');  if (el) el.value = data.note; }
+
+      // Restore chosen products + quantities
+      if (data.items) {
+        Object.keys(data.items).forEach(pid => {
+          const btn = document.querySelector('.sub-item[data-pid="' + pid + '"]');
+          if (!btn) return;
+          btn.classList.add('chosen');
+          const row = btn.closest('.sub-item-row');
+          const qc = row.querySelector('.qty-control');
+          qc.classList.remove('hidden');
+          const num = qc.querySelector('.qty-num');
+          if (num) num.textContent = data.items[pid];
+          const wrap = btn.closest('.expandable-wrap');
+          wrap.classList.add('open');
+          wrap.querySelector('.product-item').classList.add('chosen');
+        });
+      }
+      updateBasketCount();
+    }
+
+    function clearBasket() {
+      try { localStorage.removeItem(BASKET_KEY); } catch (e) {}
+    }
+
+    function onBasketChange() {
+      updateBasketCount();
+      saveBasket();
+    }
+
+    /* ── Product search / filter ── */
+    function filterProducts() {
+      const input = document.getElementById('prodSearch');
+      const q = input.value.trim().toLowerCase();
+      const clearBtn = document.getElementById('prodSearchClear');
+      clearBtn.classList.toggle('show', q.length > 0);
+
+      let anyVisible = false;
+      document.querySelectorAll('.form-box .prod-category').forEach(cat => {
+        let catHasMatch = false;
+        cat.querySelectorAll('.sub-item-row').forEach(row => {
+          const name = row.querySelector('.sub-item')?.textContent.toLowerCase() || '';
+          const match = q === '' || name.includes(q);
+          row.style.display = match ? '' : 'none';
+          if (match) catHasMatch = true;
+        });
+        cat.style.display = catHasMatch ? '' : 'none';
+        // Auto-expand while searching, collapse when cleared
+        const wrap = cat.querySelector('.expandable-wrap');
+        if (wrap) {
+          if (q === '') wrap.classList.remove('open');
+          else if (catHasMatch) wrap.classList.add('open');
+        }
+        if (catHasMatch) anyVisible = true;
+      });
+
+      document.getElementById('prodNoResults').classList.toggle('show', q !== '' && !anyVisible);
+    }
+
+    function clearProductSearch() {
+      const input = document.getElementById('prodSearch');
+      input.value = '';
+      filterProducts();
+      input.focus();
     }
 
     /* Read a chosen item's clean name — keeps sizes like (1,5L),
@@ -3885,8 +4121,12 @@ ${itemsList}${note ? '\n\nAðra: ' + note : ''}`;
         emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, templateParams)
       ])
         .then(() => {
+          clearBasket();
+          confirmBtn.textContent = 'Staðfest bílegging ✓';
+          confirmBtn.disabled = false;
           closeSummary();
-          setTimeout(() => closeOrderPage(), 400);
+          document.getElementById('confirmCode').textContent = code;
+          setTimeout(() => document.getElementById('orderConfirm').classList.add('active'), 300);
         })
         .catch(err => {
           console.error('Order error:', err);
@@ -3894,6 +4134,13 @@ ${itemsList}${note ? '\n\nAðra: ' + note : ''}`;
           confirmBtn.disabled = false;
           alert('Tað eydnaðist ikki at senda. Royn aftur ella ring til okkum.');
         });
+    }
+
+    /* Close the confirmation screen and return to the front page */
+    function finishOrder() {
+      document.getElementById('orderConfirm').classList.remove('active');
+      closeOrderPage();
+      updateBasketCount();
     }
 
     /* ── Mark today in hours table ── */
@@ -3916,6 +4163,14 @@ ${itemsList}${note ? '\n\nAðra: ' + note : ''}`;
     // Render tilboð cards and sync sale badges on load
     renderTilbod();
     applySaleBadges();
+
+    // Restore a half-built basket and keep contact fields saved as you type
+    loadBasket();
+    updateBasketCount();
+    ['o-name','o-phone','o-addr','o-note'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.addEventListener('input', saveBasket);
+    });
 
     /* ── Contact form ── */
     function handleSubmit() {
@@ -3984,6 +4239,20 @@ ${itemsList}${note ? '\n\nAðra: ' + note : ''}`;
         <button class="summary-confirm" onclick="confirmOrder()">Staðfest bílegging ✓</button>
         <button class="summary-cancel" onclick="closeSummary()">Aftur til bíleggingina</button>
       </div>
+    </div>
+  </div>
+
+  <!-- Confirmation screen -->
+  <div id="orderConfirm">
+    <div class="confirm-card">
+      <div class="confirm-check">✓</div>
+      <div class="confirm-title">Takk fyri!</div>
+      <p class="confirm-text">Tín bílegging er móttikin. Vit senda tær eini SMS, tá ið hon er liðug.</p>
+      <div class="confirm-code-box">
+        <div class="confirm-code-label">Tín bíleggingar-kóða</div>
+        <div class="confirm-code" id="confirmCode">—</div>
+      </div>
+      <button class="confirm-close" onclick="finishOrder()">Aftur til forsíðuna</button>
     </div>
   </div>
 
