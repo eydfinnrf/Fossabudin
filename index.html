@@ -799,17 +799,27 @@
     }
     #basketView.active { display: flex; }
     #basketView .summary-sheet {
-      position: relative;
       border-radius: 16px;
       max-height: 80vh;
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;            /* header stays put; body scrolls */
       transform: scale(.94);
       opacity: 0;
       transition: transform .3s cubic-bezier(.25,.8,.25,1), opacity .3s;
     }
     #basketView.active .summary-sheet { transform: scale(1); opacity: 1; }
+    /* Fixed header bar — X + title stay visible while the list scrolls */
+    #basketView .basket-header {
+      position: relative;
+      flex-shrink: 0;
+      padding: 1.3rem 1.8rem .9rem;
+      border-bottom: 1px solid var(--warm);
+    }
     /* Top-left X returns to the order page */
     #basketView .basket-close {
-      position: absolute; top: .9rem; left: .9rem;
+      position: absolute; top: 50%; left: 1rem; transform: translateY(-50%);
       width: 36px; height: 36px;
       display: flex; align-items: center; justify-content: center;
       background: none; border: none; border-radius: 50%;
@@ -817,7 +827,13 @@
       cursor: pointer; transition: background .2s;
     }
     #basketView .basket-close:hover { background: var(--warm); }
-    #basketView .summary-title { text-align: center; margin-top: .4rem; margin-bottom: 1.4rem; }
+    #basketView .summary-title { text-align: center; margin: 0; }
+    /* Scrollable body */
+    #basketView .summary-items {
+      overflow-y: auto;
+      padding: 1.3rem 1.8rem 1.8rem;
+      margin-bottom: 0;
+    }
     /* Small toned category header grouping the basket lines */
     #basketView .basket-cat { margin-bottom: 1.2rem; }
     #basketView .basket-cat:last-child { margin-bottom: 0; }
@@ -4302,9 +4318,10 @@ ${itemsList}${note ? '\n\nAðra: ' + note : ''}`;
   <!-- Basket view — quick peek at chosen items while still shopping -->
   <div id="basketView" onclick="if(event.target===this)closeBasketView()">
     <div class="summary-sheet">
-      <button class="basket-close" onclick="closeBasketView()" aria-label="Aftur til bíleggingina">✕</button>
-      <div class="summary-title">Tínar valdu vørur</div>
-
+      <div class="basket-header">
+        <button class="basket-close" onclick="closeBasketView()" aria-label="Aftur til bíleggingina">✕</button>
+        <div class="summary-title">Tínar valdu vørur</div>
+      </div>
       <div class="summary-items" id="basket-view-items"></div>
     </div>
   </div>
