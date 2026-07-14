@@ -393,6 +393,7 @@
       padding: 1.4rem 5vw;
     }
     .op-nav .op-back { position: absolute; left: 5vw; }
+    .op-nav .op-nav-reset { position: absolute; right: 5vw; }
     .op-nav-logo {
       font-family: 'Playfair Display', serif;
       font-size: 1.8rem;
@@ -488,14 +489,10 @@
       display: flex; flex-direction: column; gap: .9rem;
     }
 
-    .op-form-head {
-      display: flex; align-items: center; justify-content: space-between;
-      gap: 1rem; padding: .5rem 0 .2rem;
-    }
     .op-form-dest {
       font-family: 'Playfair Display', serif;
       font-size: 1.3rem; font-weight: 600; color: var(--ink);
-      margin: 0;
+      padding: .5rem 0 .2rem;
     }
     .op-form-dest em { color: var(--green); font-style: italic; }
 
@@ -1449,6 +1446,11 @@
       .contact-form { padding: 1.8rem 1.2rem; }
       .op-form-box { padding: 1.8rem 1.2rem; }
       .vorur-btn { padding: 1.8rem; }
+      /* Keep logo + back + reinsa ordra from crowding on phones */
+      .op-nav { padding: 1rem 4vw; }
+      .op-nav-logo { font-size: 1.3rem; }
+      .op-nav .op-back { padding: .38rem .6rem; font-size: .68rem; gap: .3rem; }
+      .op-nav .op-nav-reset { padding: .38rem .55rem; font-size: .72rem; }
     }
   </style>
 </head>
@@ -1623,8 +1625,9 @@
   <!-- ORDER PAGE OVERLAY -->
   <div id="orderPage">
     <nav class="op-nav">
-      <span class="op-nav-logo">Fossá<em>búðin</em></span>
       <button class="op-back" onclick="closeOrderPage()">← Aftur</button>
+      <span class="op-nav-logo">Fossá<em>búðin</em></span>
+      <button class="op-reset-btn op-nav-reset" onclick="resetOrder()">↺ Reinsa ordra</button>
     </nav>
 
     <!-- Step 1: choose island -->
@@ -1663,10 +1666,7 @@
     <div class="op-order-form-wrap" id="orderFormWrap">
       <div class="op-order-form">
 
-        <div class="op-form-head">
-          <p class="op-form-dest">Bílegging til <em id="formDestLabel">—</em></p>
-          <button type="button" class="op-reset-btn" onclick="resetOrder()">↺ Reinsa ordra</button>
-        </div>
+        <p class="op-form-dest">Bílegging til <em id="formDestLabel">—</em></p>
 
         <!-- Contact info -->
         <div class="form-box">
