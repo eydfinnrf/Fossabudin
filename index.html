@@ -488,12 +488,27 @@
       display: flex; flex-direction: column; gap: .9rem;
     }
 
+    .op-form-head {
+      display: flex; align-items: center; justify-content: space-between;
+      gap: 1rem; padding: .5rem 0 .2rem;
+    }
     .op-form-dest {
       font-family: 'Playfair Display', serif;
       font-size: 1.3rem; font-weight: 600; color: var(--ink);
-      padding: .5rem 0 .2rem;
+      margin: 0;
     }
     .op-form-dest em { color: var(--green); font-style: italic; }
+
+    .op-reset-btn {
+      flex-shrink: 0;
+      display: inline-flex; align-items: center; gap: .35rem;
+      background: #fff; border: 1px solid var(--stone);
+      color: var(--ink); font-size: .8rem; font-weight: 500;
+      padding: .4rem .75rem; border-radius: 8px; cursor: pointer;
+      transition: background .18s, border-color .18s, color .18s;
+    }
+    .op-reset-btn:hover { background: var(--warm); border-color: var(--ink); }
+    .op-reset-btn:active { transform: translateY(1px); }
 
     /* Info box */
     .form-box {
@@ -1660,7 +1675,10 @@
     <div class="op-order-form-wrap" id="orderFormWrap">
       <div class="op-order-form">
 
-        <p class="op-form-dest">Bílegging til <em id="formDestLabel">—</em></p>
+        <div class="op-form-head">
+          <p class="op-form-dest">Bílegging til <em id="formDestLabel">—</em></p>
+          <button type="button" class="op-reset-btn" onclick="resetOrder()">↺ Reinsa ordra</button>
+        </div>
 
         <!-- Contact info -->
         <div class="form-box">
@@ -3722,6 +3740,31 @@
 
       // Scroll order page back to top
       document.getElementById('orderPage').scrollTop = 0;
+    }
+
+    /* ── Reinsa ordra: clear the selected products (basket) ── */
+    function resetOrder() {
+      // Unselect all product items
+      document.querySelectorAll('.product-item.chosen').forEach(btn => btn.classList.remove('chosen'));
+      document.querySelectorAll('.sub-item.chosen').forEach(btn => btn.classList.remove('chosen'));
+
+      // Hide all qty controls and reset to 1
+      document.querySelectorAll('.qty-control').forEach(qc => {
+        qc.classList.add('hidden');
+        const num = qc.querySelector('.qty-num');
+        if (num) num.textContent = '1';
+      });
+
+      // Collapse all expanded panels
+      document.querySelectorAll('.expandable-wrap.open').forEach(w => w.classList.remove('open'));
+
+      // Clear the order note
+      const note = document.getElementById('o-note');
+      if (note) note.value = '';
+
+      // Clear saved basket and refresh the live counter
+      clearBasket();
+      onBasketChange();
     }
 
     /* ── Toggle the island dropdown ── */
