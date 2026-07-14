@@ -3938,20 +3938,33 @@
 
       let anyVisible = false;
       document.querySelectorAll('.form-box .prod-category').forEach(cat => {
+        // A match on the category name reveals the whole category
+        const catLabel = cat.querySelector('.prod-cat-label')?.textContent.toLowerCase() || '';
+        const catNameMatch = q !== '' && catLabel.includes(q);
         let catHasMatch = false;
-        cat.querySelectorAll('.sub-item-row').forEach(row => {
-          const name = row.querySelector('.sub-item')?.textContent.toLowerCase() || '';
-          const match = q === '' || name.includes(q);
-          row.style.display = match ? '' : 'none';
-          if (match) catHasMatch = true;
-        });
-        cat.style.display = catHasMatch ? '' : 'none';
-        // Auto-expand while searching, collapse when cleared
-        const wrap = cat.querySelector('.expandable-wrap');
-        if (wrap) {
+
+        cat.querySelectorAll('.expandable-wrap').forEach(wrap => {
+          // A match on the product-group name reveals all of its sub-items
+          const prodName = wrap.querySelector('.product-name')?.textContent.toLowerCase() || '';
+          const prodNameMatch = q !== '' && prodName.includes(q);
+          let wrapHasMatch = false;
+
+          wrap.querySelectorAll('.sub-item-row').forEach(row => {
+            const name = row.querySelector('.sub-item')?.textContent.toLowerCase() || '';
+            const match = q === '' || catNameMatch || prodNameMatch || name.includes(q);
+            row.style.display = match ? '' : 'none';
+            if (match) wrapHasMatch = true;
+          });
+
+          wrap.style.display = wrapHasMatch ? '' : 'none';
+          // Auto-expand while searching, collapse when cleared
           if (q === '') wrap.classList.remove('open');
-          else if (catHasMatch) wrap.classList.add('open');
-        }
+          else if (wrapHasMatch) wrap.classList.add('open');
+
+          if (wrapHasMatch) catHasMatch = true;
+        });
+
+        cat.style.display = catHasMatch ? '' : 'none';
         if (catHasMatch) anyVisible = true;
       });
 
