@@ -773,18 +773,6 @@
     }
     .summary-cancel:hover { border-color: var(--bark); }
 
-    .order-sale-badge {
-      font-size: .62rem;
-      font-weight: 700;
-      color: #fff;
-      background: var(--green);
-      padding: .15rem .45rem;
-      border-radius: 20px;
-      flex-shrink: 0;
-      margin-left: auto;
-      letter-spacing: .02em;
-    }
-    .sub-item .order-sale-badge { margin-left: auto; }
     .product-emoji { font-size: .95rem; flex-shrink: 0; }
     .product-name { font-size: .8rem; color: var(--ink); font-weight: 400; flex: 1; }
     .prod-check {
@@ -3820,38 +3808,6 @@
         </div>`).join('');
     }
 
-    function applySaleBadges() {
-      // Remove any existing badges first
-      document.querySelectorAll('.order-sale-badge').forEach(b => b.remove());
-
-      TILBOD.forEach(item => {
-        // Badge on parent product button
-        document.querySelectorAll('.product-item').forEach(btn => {
-          const nameEl = btn.querySelector('.product-name');
-          if (!nameEl || nameEl.textContent.trim() !== item.orderParent) return;
-          const badge = document.createElement('span');
-          badge.className = 'order-sale-badge';
-          badge.textContent = `−${item.pct}%`;
-          const anchor = btn.querySelector('.expand-arrow') || btn.querySelector('.prod-check');
-          if (anchor) btn.insertBefore(badge, anchor);
-          else btn.appendChild(badge);
-        });
-
-        // Badge on specific sub-item if defined
-        if (item.orderSub) {
-          document.querySelectorAll('.sub-item').forEach(subBtn => {
-            const text = subBtn.textContent.replace(/[^\w\s\/åæøÅÆØáéíóúýðþÁÉÍÓÚÝÐÞ]/g, '').trim();
-            if (text === item.orderSub) {
-              const badge = document.createElement('span');
-              badge.className = 'order-sale-badge';
-              badge.textContent = `−${item.pct}%`;
-              subBtn.appendChild(badge);
-            }
-          });
-        }
-      });
-    }
-
     function toggleProduct(el) { el.classList.toggle('chosen'); }
 
     function toggleExpand(btn) {
@@ -4010,10 +3966,10 @@
     }
 
     /* Read a chosen item's clean name — keeps sizes like (1,5L),
-       strips only the sale badge and the leading dot span. */
+       strips only the leading dot span. */
     function cleanItemName(btn) {
       const c = btn.cloneNode(true);
-      c.querySelectorAll('.order-sale-badge, .sub-dot').forEach(e => e.remove());
+      c.querySelectorAll('.sub-dot').forEach(e => e.remove());
       return c.textContent.trim();
     }
 
@@ -4203,9 +4159,8 @@ ${itemsList}${note ? '\n\nAðra: ' + note : ''}`;
     window.addEventListener('load', () => window.scrollTo({ top: 0, behavior: 'instant' }));
     if (history.scrollRestoration) history.scrollRestoration = 'manual';
 
-    // Render tilboð cards and sync sale badges on load
+    // Render tilboð cards on load
     renderTilbod();
-    applySaleBadges();
 
     // Restore a half-built basket and keep contact fields saved as you type
     loadBasket();
