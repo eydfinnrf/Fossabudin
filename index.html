@@ -799,6 +799,7 @@
     }
     #basketView.active { display: flex; }
     #basketView .summary-sheet {
+      position: relative;
       border-radius: 16px;
       max-height: 80vh;
       transform: scale(.94);
@@ -806,6 +807,27 @@
       transition: transform .3s cubic-bezier(.25,.8,.25,1), opacity .3s;
     }
     #basketView.active .summary-sheet { transform: scale(1); opacity: 1; }
+    /* Top-left X returns to the order page */
+    #basketView .basket-close {
+      position: absolute; top: .9rem; left: .9rem;
+      width: 36px; height: 36px;
+      display: flex; align-items: center; justify-content: center;
+      background: none; border: none; border-radius: 50%;
+      font-size: 1.5rem; line-height: 1; color: var(--bark);
+      cursor: pointer; transition: background .2s;
+    }
+    #basketView .basket-close:hover { background: var(--warm); }
+    #basketView .summary-title { text-align: center; margin-top: .4rem; }
+    /* Prominent product count */
+    #basketView #basket-view-count {
+      display: block; width: fit-content; margin: .6rem auto 1.5rem;
+      background: var(--green); color: #fff;
+      font-size: .9rem; font-weight: 700;
+      padding: .35rem 1rem; border-radius: 20px;
+    }
+    #basketView #basket-view-count.empty {
+      background: var(--warm); color: var(--stone); font-weight: 500;
+    }
 
     .order-sale-badge {
       font-size: .62rem;
@@ -4046,6 +4068,7 @@
 
       const n = countBasket();
       const countLabel = document.getElementById('basket-view-count');
+      countLabel.classList.toggle('empty', n === 0);
       countLabel.textContent = n === 0 ? 'Ongar vørur valdar enn'
         : (n === 1 ? '1 vøra vald' : n + ' vørur valdar');
 
@@ -4265,15 +4288,11 @@ ${itemsList}${note ? '\n\nAðra: ' + note : ''}`;
   <!-- Basket view — quick peek at chosen items while still shopping -->
   <div id="basketView" onclick="if(event.target===this)closeBasketView()">
     <div class="summary-sheet">
-      <div class="summary-handle"></div>
+      <button class="basket-close" onclick="closeBasketView()" aria-label="Aftur til bíleggingina">✕</button>
       <div class="summary-title">Tínar valdu vørur</div>
       <p class="summary-dest" id="basket-view-count">Ongar vørur valdar enn</p>
 
       <div class="summary-items" id="basket-view-items"></div>
-
-      <div class="summary-actions">
-        <button class="summary-cancel" onclick="closeBasketView()">← Aftur til bíleggingina</button>
-      </div>
     </div>
   </div>
 
