@@ -817,16 +817,17 @@
       cursor: pointer; transition: background .2s;
     }
     #basketView .basket-close:hover { background: var(--warm); }
-    #basketView .summary-title { text-align: center; margin-top: .4rem; }
-    /* Prominent product count */
-    #basketView #basket-view-count {
-      display: block; width: fit-content; margin: .6rem auto 1.5rem;
-      background: var(--green); color: #fff;
-      font-size: .9rem; font-weight: 700;
-      padding: .35rem 1rem; border-radius: 20px;
-    }
-    #basketView #basket-view-count.empty {
-      background: var(--warm); color: var(--stone); font-weight: 500;
+    #basketView .summary-title { text-align: center; margin-top: .4rem; margin-bottom: 1.4rem; }
+    /* Small toned category header grouping the basket lines */
+    #basketView .basket-cat { margin-bottom: 1.2rem; }
+    #basketView .basket-cat:last-child { margin-bottom: 0; }
+    #basketView .basket-cat-label {
+      display: inline-block;
+      font-size: .66rem; font-weight: 700;
+      letter-spacing: .1em; text-transform: uppercase;
+      color: var(--bark); background: var(--warm);
+      padding: .28rem .6rem; border-radius: 6px;
+      margin-bottom: .35rem;
     }
     /* Clearer, higher-contrast quantity badge on each basket line */
     #basketView .summary-item-qty {
@@ -4062,32 +4063,36 @@
 
     /* ── Basket view — quick peek at chosen items while still shopping ── */
     function openBasketView() {
-      const items = [];
-      document.querySelectorAll('.sub-item.chosen').forEach(btn => {
-        const row = btn.closest('.sub-item-row');
-        const qty = row?.querySelector('.qty-num')?.textContent || '1';
-        items.push({ name: cleanItemName(btn), qty });
-      });
-      document.querySelectorAll('.simple-qty-wrap .product-item.chosen').forEach(btn => {
-        const wrap = btn.closest('.simple-qty-wrap');
-        const qty = wrap?.querySelector('.qty-num')?.textContent || '1';
-        const text = btn.querySelector('.product-name')?.textContent.trim();
-        if (text) items.push({ name: text, qty });
-      });
+      // Group chosen items under their category, in the order they appear.
+      let html = '';
+      document.querySelectorAll('.form-box .prod-category').forEach(cat => {
+        const catName = cat.querySelector('.prod-cat-label')?.textContent.trim() || '';
+        const rows = [];
 
-      const n = countBasket();
-      const countLabel = document.getElementById('basket-view-count');
-      countLabel.classList.toggle('empty', n === 0);
-      countLabel.textContent = n === 0 ? 'Ongar vørur valdar enn'
-        : (n === 1 ? '1 vøra vald' : n + ' vørur valdar');
+        cat.querySelectorAll('.sub-item.chosen').forEach(btn => {
+          const row = btn.closest('.sub-item-row');
+          const qty = row?.querySelector('.qty-num')?.textContent || '1';
+          rows.push({ name: cleanItemName(btn), qty });
+        });
+        cat.querySelectorAll('.simple-qty-wrap .product-item.chosen').forEach(btn => {
+          const wrap = btn.closest('.simple-qty-wrap');
+          const qty = wrap?.querySelector('.qty-num')?.textContent || '1';
+          const text = btn.querySelector('.product-name')?.textContent.trim();
+          if (text) rows.push({ name: text, qty });
+        });
+
+        if (rows.length) {
+          html += `<div class="basket-cat"><p class="basket-cat-label">${catName}</p>`
+            + rows.map(i => `<div class="summary-item"><span>${i.name}</span><span class="summary-item-qty">${i.qty} stk</span></div>`).join('')
+            + `</div>`;
+        }
+      });
 
       const list = document.getElementById('basket-view-items');
-      list.innerHTML = items.length
-        ? items.map(i => `<div class="summary-item"><span>${i.name}</span><span class="summary-item-qty">${i.qty} stk</span></div>`).join('')
-        : '<p class="summary-empty">Ongar vørur valdar enn. Trýst á eina vøru fyri at leggja hana afturat.</p>';
+      list.innerHTML = html
+        || '<p class="summary-empty">Ongar vørur valdar enn. Trýst á eina vøru fyri at leggja hana afturat.</p>';
 
-      const modal = document.getElementById('basketView');
-      modal.classList.add('active');
+      document.getElementById('basketView').classList.add('active');
     }
 
     function closeBasketView() {
@@ -4299,7 +4304,6 @@ ${itemsList}${note ? '\n\nAðra: ' + note : ''}`;
     <div class="summary-sheet">
       <button class="basket-close" onclick="closeBasketView()" aria-label="Aftur til bíleggingina">✕</button>
       <div class="summary-title">Tínar valdu vørur</div>
-      <p class="summary-dest" id="basket-view-count">Ongar vørur valdar enn</p>
 
       <div class="summary-items" id="basket-view-items"></div>
     </div>
