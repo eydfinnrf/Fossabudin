@@ -393,7 +393,10 @@
       padding: 1.4rem 5vw;
     }
     .op-nav .op-back { position: absolute; left: 5vw; }
-    .op-nav .op-nav-reset { position: absolute; right: 5vw; }
+    .op-nav .op-nav-right {
+      position: absolute; right: 5vw;
+      display: flex; align-items: center; gap: .6rem;
+    }
     .op-nav-logo {
       font-family: 'Playfair Display', serif;
       font-size: 1.8rem;
@@ -414,6 +417,25 @@
       cursor: pointer; font-family: inherit; transition: all .2s;
     }
     .op-back:hover { border-color: var(--green); color: var(--green); }
+
+    /* Basket button — fixed in the order-page nav, always visible while scrolling */
+    .op-basket-btn {
+      display: inline-flex; align-items: center; justify-content: center;
+      width: 42px; height: 42px; position: relative;
+      background: none; border: 1.5px solid var(--stone); border-radius: 50%;
+      cursor: pointer; font-family: inherit; transition: all .2s;
+    }
+    .op-basket-btn:hover { border-color: var(--green); }
+    .op-basket-icon { font-size: 1.1rem; }
+    .op-basket-badge {
+      position: absolute; top: -6px; right: -6px;
+      min-width: 19px; height: 19px; padding: 0 4px;
+      display: flex; align-items: center; justify-content: center;
+      background: var(--green); color: #fff;
+      border-radius: 20px; font-size: .68rem; font-weight: 700;
+      border: 2px solid var(--cream);
+    }
+    .op-basket-badge.hidden { display: none; }
 
     /* Step 1 – choose island */
     .op-step1 {
@@ -476,7 +498,10 @@
     }
     .island-choice.selected .island-choice-check { opacity: 1; }
 
-    /* Step 2 – full order form slides in */
+    /* Step 2 – full order form slides in.
+       max-height:6000px is only a transition target for the initial
+       reveal — JS clears it to 'none' once the transition ends so
+       expanding many categories afterwards is never clipped. */
     .op-order-form-wrap {
       max-height: 0; overflow: hidden;
       transition: max-height .55s cubic-bezier(.4,0,.2,1);
@@ -770,6 +795,36 @@
     }
     .summary-cancel:hover { border-color: var(--bark); }
 
+    /* Basket view — same look as the summary sheet, opened from the nav basket icon */
+    #basketView {
+      display: none;
+      position: fixed;
+      inset: 0;
+      z-index: 250;
+      background: rgba(42,34,26,0.45);
+      backdrop-filter: blur(4px);
+      align-items: flex-end;
+      justify-content: center;
+    }
+    #basketView.active { display: flex; }
+    #basketView .summary-sheet {
+      transform: translateY(100%);
+      transition: transform .35s cubic-bezier(.25,.8,.25,1);
+    }
+    #basketView.active .summary-sheet { transform: translateY(0); }
+
+    .order-sale-badge {
+      font-size: .62rem;
+      font-weight: 700;
+      color: #fff;
+      background: var(--green);
+      padding: .15rem .45rem;
+      border-radius: 20px;
+      flex-shrink: 0;
+      margin-left: auto;
+      letter-spacing: .02em;
+    }
+    .sub-item .order-sale-badge { margin-left: auto; }
     .product-emoji { font-size: .95rem; flex-shrink: 0; }
     .product-name { font-size: .8rem; color: var(--ink); font-weight: 400; flex: 1; }
     .prod-check {
@@ -827,19 +882,6 @@
       font-size: .85rem; padding: 1.2rem 0;
     }
     .prod-noresults.show { display: block; }
-
-    /* Live basket counter on submit button */
-    .basket-count {
-      display: flex; align-items: center; justify-content: center; gap: .5rem;
-      font-size: .82rem; color: var(--bark); font-weight: 500;
-      margin-bottom: .7rem; min-height: 1.2rem;
-    }
-    .basket-count-badge {
-      background: var(--green); color: #fff;
-      border-radius: 20px; padding: .1rem .55rem;
-      font-size: .78rem; font-weight: 700;
-    }
-    .basket-count.empty { color: var(--stone); }
 
     /* Confirmation screen */
     #orderConfirm {
@@ -1627,7 +1669,13 @@
     <nav class="op-nav">
       <button class="op-back" onclick="closeOrderPage()">← Aftur</button>
       <span class="op-nav-logo">Fossá<em>búðin</em></span>
-      <button class="op-reset-btn op-nav-reset" onclick="resetOrder()">↺ Reinsa ordra</button>
+      <div class="op-nav-right">
+        <button class="op-reset-btn" onclick="resetOrder()">↺ Reinsa ordra</button>
+        <button class="op-basket-btn" id="navBasketBtn" onclick="openBasketView()" aria-label="Sí valdar vørur">
+          <span class="op-basket-icon">🧺</span>
+          <span class="op-basket-badge hidden" id="navBasketBadge">0</span>
+        </button>
+      </div>
     </nav>
 
     <!-- Step 1: choose island -->
@@ -1706,27 +1754,27 @@
                 <button class="product-item" onclick="toggleExpand(this)"><span class="product-emoji">🥛</span><span class="product-name">Mjólk</span><span class="expand-arrow">›</span></button>
                 <div class="sub-panel">
                   <div class="sub-item-row">
-                    <button class="sub-item" onclick="toggleSubItem(this)"><span class="sub-dot"></span>Bónda mjólk - 3,5%</button>
+                    <button class="sub-item" onclick="toggleSubItem(this)"><span class="sub-dot"></span>Bónda mjólk - 3,5% (1 L)</button>
                     <div class="qty-control hidden"><button class="qty-btn" onclick="changeQty(this,-1)">−</button><span class="qty-num">1</span><button class="qty-btn" onclick="changeQty(this,1)">+</button></div>
                   </div>
                   <div class="sub-item-row">
-                    <button class="sub-item" onclick="toggleSubItem(this)"><span class="sub-dot"></span>Millum mjólk - 1,5%</button>
+                    <button class="sub-item" onclick="toggleSubItem(this)"><span class="sub-dot"></span>Millum mjólk - 1,5% (1 L)</button>
                     <div class="qty-control hidden"><button class="qty-btn" onclick="changeQty(this,-1)">−</button><span class="qty-num">1</span><button class="qty-btn" onclick="changeQty(this,1)">+</button></div>
                   </div>
                   <div class="sub-item-row">
-                    <button class="sub-item" onclick="toggleSubItem(this)"><span class="sub-dot"></span>Lætti mjólk - 0,5%</button>
+                    <button class="sub-item" onclick="toggleSubItem(this)"><span class="sub-dot"></span>Lætti mjólk - 0,5% (1 L)</button>
                     <div class="qty-control hidden"><button class="qty-btn" onclick="changeQty(this,-1)">−</button><span class="qty-num">1</span><button class="qty-btn" onclick="changeQty(this,1)">+</button></div>
                   </div>
                   <div class="sub-item-row">
-                    <button class="sub-item" onclick="toggleSubItem(this)"><span class="sub-dot"></span>Solti mjólk - 0,1%</button>
+                    <button class="sub-item" onclick="toggleSubItem(this)"><span class="sub-dot"></span>Solti mjólk - 0,1% (1 L)</button>
                     <div class="qty-control hidden"><button class="qty-btn" onclick="changeQty(this,-1)">−</button><span class="qty-num">1</span><button class="qty-btn" onclick="changeQty(this,1)">+</button></div>
                   </div>
                   <div class="sub-item-row">
-                    <button class="sub-item" onclick="toggleSubItem(this)"><span class="sub-dot"></span>Haldfør mjólk</button>
+                    <button class="sub-item" onclick="toggleSubItem(this)"><span class="sub-dot"></span>Haldfør mjólk (1 L)</button>
                     <div class="qty-control hidden"><button class="qty-btn" onclick="changeQty(this,-1)">−</button><span class="qty-num">1</span><button class="qty-btn" onclick="changeQty(this,1)">+</button></div>
                   </div>
                   <div class="sub-item-row">
-                    <button class="sub-item" onclick="toggleSubItem(this)"><span class="sub-dot"></span>Laktose frí mjólk</button>
+                    <button class="sub-item" onclick="toggleSubItem(this)"><span class="sub-dot"></span>Laktose frí mjólk (1 L)</button>
                     <div class="qty-control hidden"><button class="qty-btn" onclick="changeQty(this,-1)">−</button><span class="qty-num">1</span><button class="qty-btn" onclick="changeQty(this,1)">+</button></div>
                   </div>
                 </div>
@@ -1774,15 +1822,15 @@
                 <button class="product-item" onclick="toggleExpand(this)"><span class="product-emoji">🫙</span><span class="product-name">Jogurt</span><span class="expand-arrow">›</span></button>
                 <div class="sub-panel">
                   <div class="sub-item-row">
-                    <button class="sub-item" onclick="toggleSubItem(this)"><span class="sub-dot"></span>Súrepli, Reyðrót &amp; Lime</button>
+                    <button class="sub-item" onclick="toggleSubItem(this)"><span class="sub-dot"></span>Súrepli, Reyðrót &amp; Lime (1 L)</button>
                     <div class="qty-control hidden"><button class="qty-btn" onclick="changeQty(this,-1)">−</button><span class="qty-num">1</span><button class="qty-btn" onclick="changeQty(this,1)">+</button></div>
                   </div>
                   <div class="sub-item-row">
-                    <button class="sub-item" onclick="toggleSubItem(this)"><span class="sub-dot"></span>Pera &amp; Banan</button>
+                    <button class="sub-item" onclick="toggleSubItem(this)"><span class="sub-dot"></span>Pera &amp; Banan (1 L)</button>
                     <div class="qty-control hidden"><button class="qty-btn" onclick="changeQty(this,-1)">−</button><span class="qty-num">1</span><button class="qty-btn" onclick="changeQty(this,1)">+</button></div>
                   </div>
                   <div class="sub-item-row">
-                    <button class="sub-item" onclick="toggleSubItem(this)"><span class="sub-dot"></span>Jarðber</button>
+                    <button class="sub-item" onclick="toggleSubItem(this)"><span class="sub-dot"></span>Jarðber (1 L)</button>
                     <div class="qty-control hidden"><button class="qty-btn" onclick="changeQty(this,-1)">−</button><span class="qty-num">1</span><button class="qty-btn" onclick="changeQty(this,1)">+</button></div>
                   </div>
                 </div>
@@ -1898,12 +1946,12 @@
             </div>
           </div>
 
-          <!-- KJØT & PÅLEGG -->
+          <!-- PÅLEGG -->
           <div class="prod-category">
-            <p class="prod-cat-label">Kjøt &amp; Pålegg</p>
+            <p class="prod-cat-label">Pålegg</p>
             <div class="prod-grid">
               <div class="expandable-wrap">
-                <button class="product-item" onclick="toggleExpand(this)"><span class="product-emoji">🥩</span><span class="product-name">Kjøt &amp; Pålegg</span><span class="expand-arrow">›</span></button>
+                <button class="product-item" onclick="toggleExpand(this)"><span class="product-emoji">🥪</span><span class="product-name">Pålegg</span><span class="expand-arrow">›</span></button>
                 <div class="sub-panel">
                   <div class="sub-item-row">
                     <button class="sub-item" onclick="toggleSubItem(this)"><span class="sub-dot"></span>Livurpostei (Krás)</button>
@@ -1935,10 +1983,6 @@
                   </div>
                   <div class="sub-item-row">
                     <button class="sub-item" onclick="toggleSubItem(this)"><span class="sub-dot"></span>Flesk (10 skivur)</button>
-                    <div class="qty-control hidden"><button class="qty-btn" onclick="changeQty(this,-1)">−</button><span class="qty-num">1</span><button class="qty-btn" onclick="changeQty(this,1)">+</button></div>
-                  </div>
-                  <div class="sub-item-row">
-                    <button class="sub-item" onclick="toggleSubItem(this)"><span class="sub-dot"></span>Bacon (Tulip, 200g)</button>
                     <div class="qty-control hidden"><button class="qty-btn" onclick="changeQty(this,-1)">−</button><span class="qty-num">1</span><button class="qty-btn" onclick="changeQty(this,1)">+</button></div>
                   </div>
                   <div class="sub-item-row">
@@ -1982,7 +2026,31 @@
                     <div class="qty-control hidden"><button class="qty-btn" onclick="changeQty(this,-1)">−</button><span class="qty-num">1</span><button class="qty-btn" onclick="changeQty(this,1)">+</button></div>
                   </div>
                   <div class="sub-item-row">
+                    <button class="sub-item" onclick="toggleSubItem(this)"><span class="sub-dot"></span>Jaka Bov (450g)</button>
+                    <div class="qty-control hidden"><button class="qty-btn" onclick="changeQty(this,-1)">−</button><span class="qty-num">1</span><button class="qty-btn" onclick="changeQty(this,1)">+</button></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- KJØT -->
+          <div class="prod-category">
+            <p class="prod-cat-label">Kjøt</p>
+            <div class="prod-grid">
+              <div class="expandable-wrap">
+                <button class="product-item" onclick="toggleExpand(this)"><span class="product-emoji">🥩</span><span class="product-name">Kjøt</span><span class="expand-arrow">›</span></button>
+                <div class="sub-panel">
+                  <div class="sub-item-row">
+                    <button class="sub-item" onclick="toggleSubItem(this)"><span class="sub-dot"></span>Bacon (Tulip, 200g)</button>
+                    <div class="qty-control hidden"><button class="qty-btn" onclick="changeQty(this,-1)">−</button><span class="qty-num">1</span><button class="qty-btn" onclick="changeQty(this,1)">+</button></div>
+                  </div>
+                  <div class="sub-item-row">
                     <button class="sub-item" onclick="toggleSubItem(this)"><span class="sub-dot"></span>Svínakotelettir (PH)</button>
+                    <div class="qty-control hidden"><button class="qty-btn" onclick="changeQty(this,-1)">−</button><span class="qty-num">1</span><button class="qty-btn" onclick="changeQty(this,1)">+</button></div>
+                  </div>
+                  <div class="sub-item-row">
+                    <button class="sub-item" onclick="toggleSubItem(this)"><span class="sub-dot"></span>Svínakotelettir</button>
                     <div class="qty-control hidden"><button class="qty-btn" onclick="changeQty(this,-1)">−</button><span class="qty-num">1</span><button class="qty-btn" onclick="changeQty(this,1)">+</button></div>
                   </div>
                   <div class="sub-item-row">
@@ -1991,14 +2059,6 @@
                   </div>
                   <div class="sub-item-row">
                     <button class="sub-item" onclick="toggleSubItem(this)"><span class="sub-dot"></span>Hakkað kjøt (Skorðargarður)</button>
-                    <div class="qty-control hidden"><button class="qty-btn" onclick="changeQty(this,-1)">−</button><span class="qty-num">1</span><button class="qty-btn" onclick="changeQty(this,1)">+</button></div>
-                  </div>
-                  <div class="sub-item-row">
-                    <button class="sub-item" onclick="toggleSubItem(this)"><span class="sub-dot"></span>Svínakotelettir</button>
-                    <div class="qty-control hidden"><button class="qty-btn" onclick="changeQty(this,-1)">−</button><span class="qty-num">1</span><button class="qty-btn" onclick="changeQty(this,1)">+</button></div>
-                  </div>
-                  <div class="sub-item-row">
-                    <button class="sub-item" onclick="toggleSubItem(this)"><span class="sub-dot"></span>Jaka Bov (450g)</button>
                     <div class="qty-control hidden"><button class="qty-btn" onclick="changeQty(this,-1)">−</button><span class="qty-num">1</span><button class="qty-btn" onclick="changeQty(this,1)">+</button></div>
                   </div>
                 </div>
@@ -2018,15 +2078,15 @@
                     <div class="qty-control hidden"><button class="qty-btn" onclick="changeQty(this,-1)">−</button><span class="qty-num">1</span><button class="qty-btn" onclick="changeQty(this,1)">+</button></div>
                   </div>
                   <div class="sub-item-row">
-                    <button class="sub-item" onclick="toggleSubItem(this)"><span class="sub-dot"></span>Norðøra Fiskafrikadellur</button>
+                    <button class="sub-item" onclick="toggleSubItem(this)"><span class="sub-dot"></span>Norðfra Fiskafrikadellur</button>
                     <div class="qty-control hidden"><button class="qty-btn" onclick="changeQty(this,-1)">−</button><span class="qty-num">1</span><button class="qty-btn" onclick="changeQty(this,1)">+</button></div>
                   </div>
                   <div class="sub-item-row">
-                    <button class="sub-item" onclick="toggleSubItem(this)"><span class="sub-dot"></span>Norðøra Fiskavørur</button>
+                    <button class="sub-item" onclick="toggleSubItem(this)"><span class="sub-dot"></span>Norðfra Fiskavørur</button>
                     <div class="qty-control hidden"><button class="qty-btn" onclick="changeQty(this,-1)">−</button><span class="qty-num">1</span><button class="qty-btn" onclick="changeQty(this,1)">+</button></div>
                   </div>
                   <div class="sub-item-row">
-                    <button class="sub-item" onclick="toggleSubItem(this)"><span class="sub-dot"></span>Turrur Fiskur</button>
+                    <button class="sub-item" onclick="toggleSubItem(this)"><span class="sub-dot"></span>Turrur Fiskur (325g)</button>
                     <div class="qty-control hidden"><button class="qty-btn" onclick="changeQty(this,-1)">−</button><span class="qty-num">1</span><button class="qty-btn" onclick="changeQty(this,1)">+</button></div>
                   </div>
                   <div class="sub-item-row">
@@ -3661,7 +3721,6 @@
           </div>
         </div>
 
-        <div class="basket-count empty" id="basketCount">Ongar vørur valdar enn</div>
         <button class="op-submit" onclick="submitOrder()">Víðari til bílegging →</button>
 
         <p class="op-thankyou">Takk fyri tína bílegging. Tú fært eini SMS, tá ið tín bílegging er send.</p>
@@ -3711,6 +3770,10 @@
       if (formLabel) formLabel.textContent = '—';
       const step2 = document.getElementById('orderStep2');
       if (step2) step2.style.display = 'none';
+
+      // Clear the inline max-height override so the wrap starts clean next time
+      const formWrap = document.getElementById('orderFormWrap');
+      if (formWrap) formWrap.style.maxHeight = '';
 
       // Unselect all product items
       document.querySelectorAll('.product-item.chosen').forEach(btn => btn.classList.remove('chosen'));
@@ -3775,6 +3838,22 @@
       const formWrap = document.getElementById('orderFormWrap');
       formWrap.classList.add('open');
       setTimeout(() => formWrap.scrollIntoView({ behavior: 'smooth', block: 'start' }), 80);
+      releaseFormWrapCap(formWrap);
+    }
+
+    /* The .open class only sets a fixed max-height (6000px) to animate the
+       initial reveal. With ~30 categories, expanding several of them after
+       opening can exceed that cap and get clipped, so once the reveal
+       transition ends we remove the cap entirely (max-height: none). */
+    function releaseFormWrapCap(formWrap) {
+      const release = (e) => {
+        if (e && e.propertyName !== 'max-height') return;
+        if (formWrap.classList.contains('open')) formWrap.style.maxHeight = 'none';
+        formWrap.removeEventListener('transitionend', release);
+      };
+      formWrap.addEventListener('transitionend', release);
+      // Fallback in case the transitionend event doesn't fire (e.g. tab was backgrounded)
+      setTimeout(() => release(null), 700);
     }
 
     /* ── Toggle product chip ── */
@@ -3861,17 +3940,11 @@
     }
 
     function updateBasketCount() {
-      const el = document.getElementById('basketCount');
-      if (!el) return;
+      const badge = document.getElementById('navBasketBadge');
+      if (!badge) return;
       const n = countBasket();
-      if (n === 0) {
-        el.classList.add('empty');
-        el.textContent = 'Ongar vørur valdar enn';
-      } else {
-        el.classList.remove('empty');
-        const word = n === 1 ? 'vøra vald' : 'vørur valdar';
-        el.innerHTML = '<span class="basket-count-badge">' + n + '</span> ' + word;
-      }
+      badge.classList.toggle('hidden', n === 0);
+      badge.textContent = n;
     }
 
     function saveBasket() {
@@ -4044,6 +4117,39 @@
       const modal = document.getElementById('orderSummary');
       modal.classList.remove('active');
       setTimeout(() => { modal.style.display = 'none'; }, 350);
+    }
+
+    /* ── Basket view — quick peek at chosen items while still shopping ── */
+    function openBasketView() {
+      const items = [];
+      document.querySelectorAll('.sub-item.chosen').forEach(btn => {
+        const row = btn.closest('.sub-item-row');
+        const qty = row?.querySelector('.qty-num')?.textContent || '1';
+        items.push({ name: cleanItemName(btn), qty });
+      });
+      document.querySelectorAll('.simple-qty-wrap .product-item.chosen').forEach(btn => {
+        const wrap = btn.closest('.simple-qty-wrap');
+        const qty = wrap?.querySelector('.qty-num')?.textContent || '1';
+        const text = btn.querySelector('.product-name')?.textContent.trim();
+        if (text) items.push({ name: text, qty });
+      });
+
+      const n = countBasket();
+      const countLabel = document.getElementById('basket-view-count');
+      countLabel.textContent = n === 0 ? 'Ongar vørur valdar enn'
+        : (n === 1 ? '1 vøra vald' : n + ' vørur valdar');
+
+      const list = document.getElementById('basket-view-items');
+      list.innerHTML = items.length
+        ? items.map(i => `<div class="summary-item"><span>${i.name}</span><span class="summary-item-qty">${i.qty} stk</span></div>`).join('')
+        : '<p class="summary-empty">Ongar vørur valdar enn. Trýst á eina vøru fyri at leggja hana afturat.</p>';
+
+      const modal = document.getElementById('basketView');
+      modal.classList.add('active');
+    }
+
+    function closeBasketView() {
+      document.getElementById('basketView').classList.remove('active');
     }
 
     // ── EmailJS credentials — fill these in after setting up emailjs.com ──
@@ -4249,6 +4355,21 @@ ${itemsList}${note ? '\n\nAðra: ' + note : ''}`;
       <div class="summary-actions">
         <button class="summary-confirm" onclick="confirmOrder()">Staðfest bílegging ✓</button>
         <button class="summary-cancel" onclick="closeSummary()">Aftur til bíleggingina</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Basket view — quick peek at chosen items while still shopping -->
+  <div id="basketView" onclick="if(event.target===this)closeBasketView()">
+    <div class="summary-sheet">
+      <div class="summary-handle"></div>
+      <div class="summary-title">Tínar valdu vørur</div>
+      <p class="summary-dest" id="basket-view-count">Ongar vørur valdar enn</p>
+
+      <div class="summary-items" id="basket-view-items"></div>
+
+      <div class="summary-actions">
+        <button class="summary-cancel" onclick="closeBasketView()">← Aftur til bíleggingina</button>
       </div>
     </div>
   </div>
