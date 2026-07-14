@@ -3736,8 +3736,6 @@
       document.getElementById('orderFormWrap').classList.remove('open');
       ['svinoy','fugloy'].forEach(id => document.getElementById('choice-' + id).classList.remove('selected'));
       selectedIsland = null;
-      // Restore any half-built basket from a previous visit
-      loadBasket();
       updateBasketCount();
     }
     function closeOrderPage() {
@@ -3886,14 +3884,9 @@
       onBasketChange();
     }
 
-    /* ── Live basket counter + localStorage persistence ── */
-    const BASKET_KEY = 'fossabudin-basket';
-
-    // Assign a stable id to every sub-item so we can save/restore selections
-    (function assignProductIds() {
-      document.querySelectorAll('.sub-item').forEach((btn, i) => { btn.dataset.pid = 'p' + i; });
-    })();
-
+    /* ── Live basket counter (in-session only) ──
+       The order is intentionally NOT persisted: reloading the page is the
+       way to clear/reset the order section. */
     function countBasket() {
       let n = 0;
       document.querySelectorAll('.sub-item.chosen').forEach(btn => {
@@ -3915,59 +3908,8 @@
       badge.textContent = n;
     }
 
-    function saveBasket() {
-      const items = {};
-      document.querySelectorAll('.sub-item.chosen').forEach(btn => {
-        const qty = parseInt(btn.closest('.sub-item-row')?.querySelector('.qty-num')?.textContent) || 1;
-        items[btn.dataset.pid] = qty;
-      });
-      const data = {
-        items,
-        name: document.getElementById('o-name')?.value || '',
-        phone: document.getElementById('o-phone')?.value || '',
-        addr: document.getElementById('o-addr')?.value || '',
-        note: document.getElementById('o-note')?.value || '',
-      };
-      try { localStorage.setItem(BASKET_KEY, JSON.stringify(data)); } catch (e) {}
-    }
-
-    function loadBasket() {
-      let data;
-      try { data = JSON.parse(localStorage.getItem(BASKET_KEY)); } catch (e) { return; }
-      if (!data) return;
-
-      // Restore contact fields
-      if (data.name)  { const el = document.getElementById('o-name');  if (el) el.value = data.name; }
-      if (data.phone) { const el = document.getElementById('o-phone'); if (el) el.value = data.phone; }
-      if (data.addr)  { const el = document.getElementById('o-addr');  if (el) el.value = data.addr; }
-      if (data.note)  { const el = document.getElementById('o-note');  if (el) el.value = data.note; }
-
-      // Restore chosen products + quantities
-      if (data.items) {
-        Object.keys(data.items).forEach(pid => {
-          const btn = document.querySelector('.sub-item[data-pid="' + pid + '"]');
-          if (!btn) return;
-          btn.classList.add('chosen');
-          const row = btn.closest('.sub-item-row');
-          const qc = row.querySelector('.qty-control');
-          qc.classList.remove('hidden');
-          const num = qc.querySelector('.qty-num');
-          if (num) num.textContent = data.items[pid];
-          const wrap = btn.closest('.expandable-wrap');
-          wrap.classList.add('open');
-          wrap.querySelector('.product-item').classList.add('chosen');
-        });
-      }
-      updateBasketCount();
-    }
-
-    function clearBasket() {
-      try { localStorage.removeItem(BASKET_KEY); } catch (e) {}
-    }
-
     function onBasketChange() {
       updateBasketCount();
-      saveBasket();
     }
 
     /* ── Product search / filter ── */
@@ -4207,7 +4149,6 @@ ${itemsList}${note ? '\n\nAðra: ' + note : ''}`;
         emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, templateParams)
       ])
         .then(() => {
-          clearBasket();
           confirmBtn.textContent = 'Staðfest bílegging ✓';
           confirmBtn.disabled = false;
           closeSummary();
@@ -4249,13 +4190,7 @@ ${itemsList}${note ? '\n\nAðra: ' + note : ''}`;
     // Render tilboð cards on load
     renderTilbod();
 
-    // Restore a half-built basket and keep contact fields saved as you type
-    loadBasket();
     updateBasketCount();
-    ['o-name','o-phone','o-addr','o-note'].forEach(id => {
-      const el = document.getElementById(id);
-      if (el) el.addEventListener('input', saveBasket);
-    });
 
     /* ── Contact form ── */
     function handleSubmit() {
