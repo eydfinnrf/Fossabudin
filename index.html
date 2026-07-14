@@ -521,17 +521,6 @@
     }
     .op-form-dest em { color: var(--green); font-style: italic; }
 
-    .op-reset-btn {
-      flex-shrink: 0;
-      display: inline-flex; align-items: center; gap: .35rem;
-      background: #fff; border: 1px solid var(--stone);
-      color: var(--ink); font-size: .8rem; font-weight: 500;
-      padding: .4rem .75rem; border-radius: 8px; cursor: pointer;
-      transition: background .18s, border-color .18s, color .18s;
-    }
-    .op-reset-btn:hover { background: var(--warm); border-color: var(--ink); }
-    .op-reset-btn:active { transform: translateY(1px); }
-
     /* Info box */
     .form-box {
       background: #fff; border: 1px solid var(--warm);
@@ -1670,7 +1659,6 @@
       <button class="op-back" onclick="closeOrderPage()">← Aftur</button>
       <span class="op-nav-logo">Fossá<em>búðin</em></span>
       <div class="op-nav-right">
-        <button class="op-reset-btn" onclick="resetOrder()">↺ Reinsa ordra</button>
         <button class="op-basket-btn" id="navBasketBtn" onclick="openBasketView()" aria-label="Sí valdar vørur">
           <span class="op-basket-icon">🧺</span>
           <span class="op-basket-badge hidden" id="navBasketBadge">0</span>
@@ -3791,31 +3779,6 @@
 
       // Scroll order page back to top
       document.getElementById('orderPage').scrollTop = 0;
-    }
-
-    /* ── Reinsa ordra: clear the selected products (basket) ── */
-    function resetOrder() {
-      // Unselect all product items
-      document.querySelectorAll('.product-item.chosen').forEach(btn => btn.classList.remove('chosen'));
-      document.querySelectorAll('.sub-item.chosen').forEach(btn => btn.classList.remove('chosen'));
-
-      // Hide all qty controls and reset to 1
-      document.querySelectorAll('.qty-control').forEach(qc => {
-        qc.classList.add('hidden');
-        const num = qc.querySelector('.qty-num');
-        if (num) num.textContent = '1';
-      });
-
-      // Collapse all expanded panels
-      document.querySelectorAll('.expandable-wrap.open').forEach(w => w.classList.remove('open'));
-
-      // Clear the order note
-      const note = document.getElementById('o-note');
-      if (note) note.value = '';
-
-      // Clear saved basket and refresh the live counter
-      clearBasket();
-      onBasketChange();
     }
 
     /* ── Toggle the island dropdown ── */
