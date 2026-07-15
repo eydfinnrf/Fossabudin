@@ -1734,7 +1734,6 @@
           <span class="island-choice-icon">⛵</span>
           <div>
             <div class="island-choice-name">Svínoy</div>
-            <div class="island-choice-hint">Sending á bátsdegi</div>
           </div>
           <span class="island-choice-check">✓</span>
         </button>
@@ -3837,7 +3836,6 @@
     function selectIsland(id) {
       selectedIsland = id;
       const labels = { svinoy: 'Svínoy', fugloy: 'Fugloy' };
-      const hints  = { svinoy: 'Sending á bátsdegi', fugloy: 'Kirkja og Hattarvík' };
 
       // Mark chosen
       ['svinoy','fugloy'].forEach(c => document.getElementById('choice-' + c).classList.remove('selected'));
