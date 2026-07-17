@@ -1,0 +1,14 @@
+name = "fossabudin-sms"
+main = "src/send-order-sms.js"
+compatibility_date = "2026-07-17"
+
+# Secrets (set later with `wrangler secret put <NAME>`, or in the dashboard).
+# Nothing is hard-coded here:
+#   TWILIO_ACCOUNT_SID
+#   TWILIO_AUTH_TOKEN
+#   TWILIO_PHONE
+#   SHOP_OWNER_PHONE
+#
+# Optional plain var: lock CORS to your site's origin once hosting is chosen.
+[vars]
+ALLOWED_ORIGIN = "*"

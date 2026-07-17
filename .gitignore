@@ -4,3 +4,8 @@ node_modules
 .DS_Store
 *.swp
 .netlify
+
+# Cloudflare build output
+dist
+.wrangler
+**/.wrangler/

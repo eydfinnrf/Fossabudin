@@ -1,0 +1,15 @@
+{
+  // Cloudflare Worker that serves the Fossábúðin website as static assets.
+  // Git-connected via Workers Builds; deploys on every push to `main`.
+  //
+  // The deploy command (set in the Cloudflare dashboard) assembles ./dist with
+  // only the two files the site needs, then deploys:
+  //   mkdir -p dist && cp index.html fossabudin-store.png dist/ && npx wrangler deploy
+  //
+  // The SMS backend is a separate Worker (see cloudflare/).
+  "name": "fossabudin",
+  "compatibility_date": "2026-07-17",
+  "assets": {
+    "directory": "./dist"
+  }
+}
