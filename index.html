@@ -4191,8 +4191,8 @@ Koda: ${code}
 Vørur:
 ${itemsList}${note ? '\n\nAðra: ' + note : ''}`;
 
-      // Send SMS via Netlify function
-      const smsPromise = fetch('/.netlify/functions/send-order-sms', {
+      // Send SMS via Cloudflare Worker
+      const smsPromise = fetch('https://fossabudin-sms.eydfinn-rajani-faroe.workers.dev', {
         method: 'POST',
         body: JSON.stringify({
           customerPhone: formattedPhone,

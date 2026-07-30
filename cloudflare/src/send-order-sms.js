@@ -58,21 +58,24 @@ export default {
 
 /** Send one SMS through the Twilio REST API. */
 async function sendSms(env, to, body) {
-  const sid = env.TWILIO_ACCOUNT_SID;
-  const token = env.TWILIO_AUTH_TOKEN;
+  const accountSid = env.TWILIO_ACCOUNT_SID;
   const from = env.TWILIO_PHONE;
+  // Prefer a revocable Twilio API Key if provided; otherwise fall back to the
+  // account Auth Token. The request URL always uses the Account SID.
+  const authUser = env.TWILIO_API_KEY_SID || accountSid;
+  const authPass = env.TWILIO_API_KEY_SECRET || env.TWILIO_AUTH_TOKEN;
 
-  if (!sid || !token || !from) {
+  if (!accountSid || !authPass || !from) {
     throw new Error('Twilio secrets are not configured yet');
   }
 
-  const url = `https://api.twilio.com/2010-04-01/Accounts/${sid}/Messages.json`;
+  const url = `https://api.twilio.com/2010-04-01/Accounts/${accountSid}/Messages.json`;
   const form = new URLSearchParams({ To: to, From: from, Body: body });
 
   const resp = await fetch(url, {
     method: 'POST',
     headers: {
-      Authorization: 'Basic ' + btoa(`${sid}:${token}`),
+      Authorization: 'Basic ' + btoa(`${authUser}:${authPass}`),
       'Content-Type': 'application/x-www-form-urlencoded',
     },
     body: form.toString(),
