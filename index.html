@@ -4191,14 +4191,17 @@ Koda: ${code}
 Vørur:
 ${itemsList}${note ? '\n\nAðra: ' + note : ''}`;
 
-      // Send SMS via Cloudflare Worker
+      // Send SMS via Cloudflare Worker — this is the order-delivery path.
       const smsPromise = fetch('https://fossabudin-sms.eydfinn-rajani-faroe.workers.dev', {
         method: 'POST',
         body: JSON.stringify({
           customerPhone: formattedPhone,
           orderDetails: smsOrderDetails
         })
-      }).catch(err => console.warn('SMS sending not available:', err));
+      }).then(res => {
+        if (!res.ok) throw new Error('SMS request failed: ' + res.status);
+        return res;
+      });
 
       // Email params
       const templateParams = {
@@ -4213,11 +4216,12 @@ ${itemsList}${note ? '\n\nAðra: ' + note : ''}`;
         code     : code,
       };
 
-      // Send both SMS and email
-      Promise.all([
-        smsPromise,
-        emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, templateParams)
-      ])
+      // Email is a best-effort extra — never let it block the confirmation.
+      emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, templateParams)
+        .catch(err => console.warn('Email not sent (SMS is the main channel):', err));
+
+      // Show the thank-you screen once the order SMS has gone through.
+      smsPromise
         .then(() => {
           confirmBtn.textContent = 'Staðfest bílegging ✓';
           confirmBtn.disabled = false;
@@ -4347,7 +4351,7 @@ ${itemsList}${note ? '\n\nAðra: ' + note : ''}`;
   <div id="orderConfirm">
     <div class="confirm-card">
       <div class="confirm-check">✓</div>
-      <div class="confirm-title">Takk fyri!</div>
+      <div class="confirm-title">Takk fyri bíleggingina</div>
       <p class="confirm-text">Tín bílegging er móttikin. Vit senda tær eini SMS, tá ið hon er liðug.</p>
       <div class="confirm-code-box">
         <div class="confirm-code-label">Tín bíleggingar-kóða</div>
