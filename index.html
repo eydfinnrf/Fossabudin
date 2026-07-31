@@ -689,7 +689,7 @@
     .summary-head { padding: 0 1.8rem .2rem; flex-shrink: 0; }
     .summary-body { padding: .4rem 1.8rem; flex: 1 1 auto; overflow-y: auto; min-height: 0; }
     .summary-foot {
-      padding: 1rem 1.8rem 1.6rem;
+      padding: .7rem 1.8rem 1.1rem;
       flex-shrink: 0;
       border-top: 1px solid var(--warm);
       background: var(--cream);
@@ -764,24 +764,26 @@
     }
     .summary-actions {
       display: flex;
-      gap: .8rem;
+      gap: .45rem;
       flex-direction: column;
     }
     .summary-confirm {
       width: 100%;
-      padding: 1rem;
+      padding: .65rem;
       background: var(--green);
       color: #fff;
       border: none;
       border-radius: var(--radius);
       font-family: inherit;
-      font-size: .95rem;
+      font-size: .9rem;
       font-weight: 500;
       cursor: pointer;
       transition: background .2s;
     }
     .summary-confirm:hover { background: #3a5332; }
-    .turnstile-box { margin: 0 0 12px; display: flex; justify-content: center; min-height: 1px; }
+    /* Bot-check: invisible unless a challenge is actually needed (interaction-only) */
+    .turnstile-box { margin: 0; display: flex; justify-content: center; }
+    .turnstile-box:empty { display: none; }
     .verify-hint { font-size: 14px; color: #6b6b60; margin: 0 0 12px; line-height: 1.4; }
     .verify-input {
       width: 100%; box-sizing: border-box; text-align: center;
@@ -793,13 +795,13 @@
     .verify-error { color: #b5341f; font-size: 14px; margin: 0 0 12px; text-align: center; }
     .summary-cancel {
       width: 100%;
-      padding: .8rem;
+      padding: .5rem;
       background: none;
       color: var(--bark);
       border: 1.5px solid var(--stone);
       border-radius: var(--radius);
       font-family: inherit;
-      font-size: .88rem;
+      font-size: .82rem;
       font-weight: 500;
       cursor: pointer;
       transition: border-color .2s;
@@ -4173,7 +4175,7 @@
     function ensureTurnstile() {
       if (!window.turnstile) return;
       if (turnstileId === null) {
-        turnstileId = turnstile.render('#turnstile-widget', { sitekey: TURNSTILE_SITEKEY });
+        turnstileId = turnstile.render('#turnstile-widget', { sitekey: TURNSTILE_SITEKEY, appearance: 'interaction-only' });
       } else {
         turnstile.reset(turnstileId);
       }
