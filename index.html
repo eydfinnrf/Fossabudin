@@ -668,9 +668,10 @@
       width: 100%;
       max-width: 560px;
       border-radius: 16px 16px 0 0;
-      padding: 2rem 1.8rem 2.4rem;
-      max-height: 85vh;
-      overflow-y: auto;
+      max-height: 88vh;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
       transform: translateY(100%);
       transition: transform .35s cubic-bezier(.25,.8,.25,1);
     }
@@ -681,7 +682,17 @@
       width: 40px; height: 4px;
       background: var(--stone);
       border-radius: 4px;
-      margin: 0 auto 1.5rem;
+      margin: .9rem auto 1rem;
+      flex-shrink: 0;
+    }
+    /* Summary sheet zones: head + foot stay fixed, only the body scrolls */
+    .summary-head { padding: 0 1.8rem .2rem; flex-shrink: 0; }
+    .summary-body { padding: .4rem 1.8rem; flex: 1 1 auto; overflow-y: auto; min-height: 0; }
+    .summary-foot {
+      padding: 1rem 1.8rem 1.6rem;
+      flex-shrink: 0;
+      border-top: 1px solid var(--warm);
+      background: var(--cream);
     }
     .summary-title {
       font-family: 'Playfair Display', serif;
@@ -4374,42 +4385,50 @@
   <div id="orderSummary" onclick="if(event.target===this)closeSummary()">
     <div class="summary-sheet">
       <div class="summary-handle"></div>
-      <div class="summary-title">Staðfest bílegging</div>
-      <p class="summary-dest">Til <strong id="sum-dest"></strong></p>
 
-      <p class="summary-section-label">Tínar upplýsingar</p>
-      <div class="summary-info">
-        <div><strong>Navn:</strong> <span id="sum-name"></span></div>
-        <div><strong>Telefon:</strong> <span id="sum-phone"></span></div>
-        <div><strong>Adressa:</strong> <span id="sum-addr"></span></div>
-      </div>
-
-      <p class="summary-section-label">Vørur</p>
-      <div class="summary-items" id="sum-items"></div>
-
-      <div id="sum-note-wrap" style="display:none;">
-        <p class="summary-section-label">Viðmerking</p>
-        <div class="summary-note" id="sum-note"></div>
-      </div>
-
-      <!-- Step 1: review + request a verification code by SMS -->
-      <div id="sum-step-send">
-        <div id="turnstile-widget" class="turnstile-box"></div>
-        <div class="summary-actions">
-          <button class="summary-confirm" id="sendCodeBtn" onclick="requestCode()">Send váttanarkóðu</button>
-          <button class="summary-cancel" onclick="closeSummary()">Aftur til bíleggingina</button>
+      <!-- Fixed head: title + customer info (always visible) -->
+      <div class="summary-head">
+        <div class="summary-title">Staðfest bílegging</div>
+        <p class="summary-dest">Til <strong id="sum-dest"></strong></p>
+        <p class="summary-section-label">Tínar upplýsingar</p>
+        <div class="summary-info">
+          <div><strong>Navn:</strong> <span id="sum-name"></span></div>
+          <div><strong>Telefon:</strong> <span id="sum-phone"></span></div>
+          <div><strong>Adressa:</strong> <span id="sum-addr"></span></div>
         </div>
       </div>
 
-      <!-- Step 2: enter the code from the SMS -->
-      <div id="sum-step-verify" style="display:none;">
-        <p class="summary-section-label">Vátta við kóðu</p>
-        <p class="verify-hint">Vit sendu ein kóða til <strong id="verify-phone"></strong>. Skriva kóðuna her fyri at staðfesta bíleggingina.</p>
-        <input id="verify-code" class="verify-input" type="text" inputmode="numeric" maxlength="6" placeholder="000000" autocomplete="one-time-code" />
-        <div id="verify-error" class="verify-error" style="display:none;"></div>
-        <div class="summary-actions">
-          <button class="summary-confirm" id="verifyBtn" onclick="verifyOrder()">Vátta bílegging ✓</button>
-          <button class="summary-cancel" onclick="backToReview()">Aftur</button>
+      <!-- Scrollable body: the order items (this is the only part that scrolls) -->
+      <div class="summary-body">
+        <p class="summary-section-label">Vørur</p>
+        <div class="summary-items" id="sum-items"></div>
+        <div id="sum-note-wrap" style="display:none;">
+          <p class="summary-section-label">Viðmerking</p>
+          <div class="summary-note" id="sum-note"></div>
+        </div>
+      </div>
+
+      <!-- Fixed foot: bot-check + action buttons (always visible) -->
+      <div class="summary-foot">
+        <!-- Step 1: review + request a verification code by SMS -->
+        <div id="sum-step-send">
+          <div id="turnstile-widget" class="turnstile-box"></div>
+          <div class="summary-actions">
+            <button class="summary-confirm" id="sendCodeBtn" onclick="requestCode()">Send váttanarkóðu</button>
+            <button class="summary-cancel" onclick="closeSummary()">Aftur til bíleggingina</button>
+          </div>
+        </div>
+
+        <!-- Step 2: enter the code from the SMS -->
+        <div id="sum-step-verify" style="display:none;">
+          <p class="summary-section-label">Vátta við kóðu</p>
+          <p class="verify-hint">Vit sendu ein kóða til <strong id="verify-phone"></strong>. Skriva kóðuna her fyri at staðfesta bíleggingina.</p>
+          <input id="verify-code" class="verify-input" type="text" inputmode="numeric" maxlength="6" placeholder="000000" autocomplete="one-time-code" />
+          <div id="verify-error" class="verify-error" style="display:none;"></div>
+          <div class="summary-actions">
+            <button class="summary-confirm" id="verifyBtn" onclick="verifyOrder()">Vátta bílegging ✓</button>
+            <button class="summary-cancel" onclick="backToReview()">Aftur</button>
+          </div>
         </div>
       </div>
     </div>
