@@ -8,6 +8,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet" />
   <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+  <script src="https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit" async defer></script>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -769,6 +770,16 @@
       transition: background .2s;
     }
     .summary-confirm:hover { background: #3a5332; }
+    .turnstile-box { margin: 0 0 12px; display: flex; justify-content: center; min-height: 1px; }
+    .verify-hint { font-size: 14px; color: #6b6b60; margin: 0 0 12px; line-height: 1.4; }
+    .verify-input {
+      width: 100%; box-sizing: border-box; text-align: center;
+      font-size: 28px; letter-spacing: 8px; font-weight: 600;
+      padding: 14px 10px; border: 2px solid #cfcabb; border-radius: 12px;
+      background: #fff; color: #2b2b25; margin-bottom: 12px;
+    }
+    .verify-input:focus { outline: none; border-color: #4a6340; }
+    .verify-error { color: #b5341f; font-size: 14px; margin: 0 0 12px; text-align: center; }
     .summary-cancel {
       width: 100%;
       padding: .8rem;
@@ -4082,10 +4093,12 @@
         noteBox.style.display = 'none';
       }
 
-      // Show modal
+      // Show modal (reset to step 1 and prime the bot-check)
+      resetOrderSteps();
       const modal = document.getElementById('orderSummary');
       modal.style.display = 'flex';
       requestAnimationFrame(() => modal.classList.add('active'));
+      ensureTurnstile();
     }
 
     function closeSummary() {
@@ -4139,29 +4152,48 @@
 
     emailjs.init({ publicKey: EMAILJS_PUBLIC_KEY });
 
-    function confirmOrder() {
-      const name   = document.getElementById('o-name').value.trim();
-      const phone  = document.getElementById('o-phone').value.trim();
-      const addr   = document.getElementById('o-addr').value.trim();
-      const note   = document.getElementById('o-note').value.trim();
-      const label  = selectedIsland === 'svinoy' ? 'Svínoy' : 'Fugloy';
+    // ── Order verification (phone one-time code) ──
+    const SMS_WORKER = 'https://fossabudin-sms.eydfinn-rajani-faroe.workers.dev';
+    const TURNSTILE_SITEKEY = '0x4AAAAAAECPqn65MRX-2Bud';
+    let turnstileId = null;
+    let pendingOrder = null; // { phone, orderDetails } captured at step 1
 
-      // Validate phone number
-      if (!phone) {
-        alert('Vinarliga skriva títt telefonnummar.');
-        return;
+    // Render (or reset) the Turnstile bot-check widget in the summary modal.
+    function ensureTurnstile() {
+      if (!window.turnstile) return;
+      if (turnstileId === null) {
+        turnstileId = turnstile.render('#turnstile-widget', { sitekey: TURNSTILE_SITEKEY });
+      } else {
+        turnstile.reset(turnstileId);
       }
+    }
 
-      // Generate random 5-digit code
-      const code = String(Math.floor(10000 + Math.random() * 90000));
+    // Reset the summary modal to its first step (review + send code).
+    function resetOrderSteps() {
+      const s = document.getElementById('sum-step-send');
+      const v = document.getElementById('sum-step-verify');
+      if (s) s.style.display = '';
+      if (v) v.style.display = 'none';
+      const err = document.getElementById('verify-error');
+      if (err) err.style.display = 'none';
+    }
 
-      // Build item list
+    function backToReview() {
+      resetOrderSteps();
+      ensureTurnstile();
+    }
+
+    // Gather the chosen items + details into a plain-text order for SMS.
+    function buildOrderDetails() {
+      const name  = document.getElementById('o-name').value.trim();
+      const addr  = document.getElementById('o-addr').value.trim();
+      const note  = document.getElementById('o-note').value.trim();
+      const label = selectedIsland === 'svinoy' ? 'Svínoy' : 'Fugloy';
       const items = [];
       document.querySelectorAll('.sub-item.chosen').forEach(btn => {
         const row = btn.closest('.sub-item-row');
         const qty = row?.querySelector('.qty-num')?.textContent || '1';
-        const text = cleanItemName(btn);
-        items.push(qty + 'x ' + text);
+        items.push(qty + 'x ' + cleanItemName(btn));
       });
       document.querySelectorAll('.simple-qty-wrap .product-item.chosen').forEach(btn => {
         const wrap = btn.closest('.simple-qty-wrap');
@@ -4170,71 +4202,102 @@
         if (text) items.push(qty + 'x ' + text);
       });
       const itemsList = items.length ? items.join('\n') : 'Ongir vørur valdar';
+      return `Navn: ${name}\nAdressa: ${addr}\nOyggj: ${label}\n\nVørur:\n${itemsList}${note ? '\n\nViðmerking: ' + note : ''}`;
+    }
 
-      // Show sending state on confirm button
-      const confirmBtn = document.querySelector('.summary-confirm');
-      confirmBtn.textContent = 'Sending…';
-      confirmBtn.disabled = true;
-
-      // Format phone to international format if needed
-      let formattedPhone = phone;
-      if (!formattedPhone.startsWith('+')) {
-        formattedPhone = '+298' + formattedPhone.replace(/\D/g, '');
+    // Step 1 — ask the Worker to SMS a verification code to the customer.
+    function requestCode() {
+      const phone = document.getElementById('o-phone').value.trim();
+      let fmt = phone.replace(/[\s-]/g, '');
+      if (!fmt.startsWith('+')) fmt = '+298' + fmt.replace(/\D/g, '');
+      if (!/^\+298[2578]\d{5}$/.test(fmt)) {
+        alert('Skriva eitt gildigt telefonnummar (6 tøl, byrjar við 2, 5, 7 ella 8).');
+        return;
       }
 
-      // Build order details for SMS
-      const smsOrderDetails = `Navn: ${name}
-Adressa: ${addr}
-Oyggj: ${label}
-Koda: ${code}
+      const token = (window.turnstile && turnstileId !== null) ? turnstile.getResponse(turnstileId) : '';
+      if (!token) { alert('Vinarliga bíða eitt sindur og royn aftur (robot-eftirkanning).'); ensureTurnstile(); return; }
 
-Vørur:
-${itemsList}${note ? '\n\nViðmerking: ' + note : ''}`;
+      pendingOrder = { phone: fmt, orderDetails: buildOrderDetails() };
 
-      // Send SMS via Cloudflare Worker — this is the order-delivery path.
-      const smsPromise = fetch('https://fossabudin-sms.eydfinn-rajani-faroe.workers.dev', {
+      const btn = document.getElementById('sendCodeBtn');
+      btn.textContent = 'Sendir…'; btn.disabled = true;
+
+      fetch(SMS_WORKER + '/request-code', {
         method: 'POST',
-        body: JSON.stringify({
-          customerPhone: formattedPhone,
-          orderDetails: smsOrderDetails
-        })
-      }).then(res => {
-        if (!res.ok) throw new Error('SMS request failed: ' + res.status);
-        return res;
-      });
-
-      // Email params
-      const templateParams = {
-        to_email : phone.replace(/\D/g, '') + '@gsm.fo',
-        from_name: 'Fossábúðin',
-        customer : name,
-        phone    : phone,
-        address  : addr,
-        island   : label,
-        items    : itemsList,
-        note     : note || '—',
-        code     : code,
-      };
-
-      // Email is a best-effort extra — never let it block the confirmation.
-      emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, templateParams)
-        .catch(err => console.warn('Email not sent (SMS is the main channel):', err));
-
-      // Show the thank-you screen once the order SMS has gone through.
-      smsPromise
-        .then(() => {
-          confirmBtn.textContent = 'Staðfest bílegging ✓';
-          confirmBtn.disabled = false;
-          closeSummary();
-          document.getElementById('confirmCode').textContent = code;
-          setTimeout(() => document.getElementById('orderConfirm').classList.add('active'), 300);
+        body: JSON.stringify({ phone: fmt, turnstileToken: token })
+      })
+        .then(async res => {
+          const data = await res.json().catch(() => ({}));
+          btn.textContent = 'Send váttanarkóðu'; btn.disabled = false;
+          if (res.ok && data.ok) {
+            document.getElementById('verify-phone').textContent = fmt;
+            document.getElementById('sum-step-send').style.display = 'none';
+            document.getElementById('sum-step-verify').style.display = 'block';
+            const inp = document.getElementById('verify-code');
+            inp.value = ''; inp.focus();
+          } else {
+            alert(orderErrorText(data.error));
+            ensureTurnstile();
+          }
         })
         .catch(err => {
-          console.error('Order error:', err);
-          confirmBtn.textContent = 'Staðfest bílegging ✓';
-          confirmBtn.disabled = false;
-          alert('Tað eydnaðist ikki at senda. Royn aftur ella ring til okkum.');
+          console.error('request-code error:', err);
+          btn.textContent = 'Send váttanarkóðu'; btn.disabled = false;
+          alert('Tað eydnaðist ikki at senda kóðuna. Royn aftur.');
         });
+    }
+
+    // Step 2 — verify the code; on success the order is sent and confirmed.
+    function verifyOrder() {
+      if (!pendingOrder) { backToReview(); return; }
+      const code = document.getElementById('verify-code').value.trim();
+      const errEl = document.getElementById('verify-error');
+      errEl.style.display = 'none';
+      if (!/^\d{6}$/.test(code)) { errEl.textContent = 'Skriva 6-tal kóðuna.'; errEl.style.display = 'block'; return; }
+
+      const btn = document.getElementById('verifyBtn');
+      btn.textContent = 'Váttar…'; btn.disabled = true;
+
+      fetch(SMS_WORKER + '/verify-order', {
+        method: 'POST',
+        body: JSON.stringify({ phone: pendingOrder.phone, code, orderDetails: pendingOrder.orderDetails })
+      })
+        .then(async res => {
+          const data = await res.json().catch(() => ({}));
+          btn.textContent = 'Vátta bílegging ✓'; btn.disabled = false;
+          if (res.ok && data.ok) {
+            pendingOrder = null;
+            closeSummary();
+            resetOrderSteps();
+            setTimeout(() => document.getElementById('orderConfirm').classList.add('active'), 300);
+          } else {
+            errEl.textContent = orderErrorText(data.error, data.triesLeft);
+            errEl.style.display = 'block';
+          }
+        })
+        .catch(err => {
+          console.error('verify-order error:', err);
+          btn.textContent = 'Vátta bílegging ✓'; btn.disabled = false;
+          errEl.textContent = 'Feilur. Royn aftur.'; errEl.style.display = 'block';
+        });
+    }
+
+    // Faroese text for the Worker's error codes.
+    function orderErrorText(err, triesLeft) {
+      switch (err) {
+        case 'invalid_phone':    return 'Skriva eitt gildigt telefonnummar (6 tøl, byrjar við 2, 5, 7 ella 8).';
+        case 'bot_check_failed': return 'Robot-eftirkanningin miseydnaðist. Royn aftur.';
+        case 'too_soon':         return 'Bíða eitt minutt áðrenn tú biður um eina nýggja kóðu.';
+        case 'hourly_limit':
+        case 'daily_limit':
+        case 'ip_hourly_limit':
+        case 'ip_daily_limit':   return 'Ov nógvar fyrispurningar. Royn aftur seinni.';
+        case 'wrong_code':       return 'Skeiv kóða.' + (typeof triesLeft === 'number' ? ' ' + triesLeft + ' royndir eftir.' : '');
+        case 'code_expired':     return 'Kóðin er útgingin. Far aftur og send eina nýggja kóðu.';
+        case 'too_many_tries':   return 'Ov nógvar royndir. Far aftur og send eina nýggja kóðu.';
+        default:                 return 'Nakað fór skeivt. Royn aftur.';
+      }
     }
 
     /* Close the confirmation screen and return to the front page */
@@ -4329,9 +4392,25 @@ ${itemsList}${note ? '\n\nViðmerking: ' + note : ''}`;
         <div class="summary-note" id="sum-note"></div>
       </div>
 
-      <div class="summary-actions">
-        <button class="summary-confirm" onclick="confirmOrder()">Staðfest bílegging ✓</button>
-        <button class="summary-cancel" onclick="closeSummary()">Aftur til bíleggingina</button>
+      <!-- Step 1: review + request a verification code by SMS -->
+      <div id="sum-step-send">
+        <div id="turnstile-widget" class="turnstile-box"></div>
+        <div class="summary-actions">
+          <button class="summary-confirm" id="sendCodeBtn" onclick="requestCode()">Send váttanarkóðu</button>
+          <button class="summary-cancel" onclick="closeSummary()">Aftur til bíleggingina</button>
+        </div>
+      </div>
+
+      <!-- Step 2: enter the code from the SMS -->
+      <div id="sum-step-verify" style="display:none;">
+        <p class="summary-section-label">Vátta við kóðu</p>
+        <p class="verify-hint">Vit sendu ein kóða til <strong id="verify-phone"></strong>. Skriva kóðuna her fyri at staðfesta bíleggingina.</p>
+        <input id="verify-code" class="verify-input" type="text" inputmode="numeric" maxlength="6" placeholder="000000" autocomplete="one-time-code" />
+        <div id="verify-error" class="verify-error" style="display:none;"></div>
+        <div class="summary-actions">
+          <button class="summary-confirm" id="verifyBtn" onclick="verifyOrder()">Vátta bílegging ✓</button>
+          <button class="summary-cancel" onclick="backToReview()">Aftur</button>
+        </div>
       </div>
     </div>
   </div>
@@ -4352,11 +4431,7 @@ ${itemsList}${note ? '\n\nViðmerking: ' + note : ''}`;
     <div class="confirm-card">
       <div class="confirm-check">✓</div>
       <div class="confirm-title">Takk fyri bíleggingina</div>
-      <p class="confirm-text">Tín bílegging er móttikin. Vit senda tær eini SMS, tá ið hon er liðug.</p>
-      <div class="confirm-code-box">
-        <div class="confirm-code-label">Tín bíleggingar-kóða</div>
-        <div class="confirm-code" id="confirmCode">—</div>
-      </div>
+      <p class="confirm-text">Tín bílegging er staðfest. Tú hevur fingið eina SMS við tíni bílegging.</p>
       <button class="confirm-close" onclick="finishOrder()">Aftur til forsíðuna</button>
     </div>
   </div>
