@@ -4242,7 +4242,7 @@
       })
         .then(async res => {
           const data = await res.json().catch(() => ({}));
-          btn.textContent = 'Send váttanarkóðu'; btn.disabled = false;
+          btn.textContent = 'Send Váttanarkóðu'; btn.disabled = false;
           if (res.ok && data.ok) {
             document.getElementById('verify-phone').textContent = fmt;
             document.getElementById('sum-step-send').style.display = 'none';
@@ -4256,7 +4256,7 @@
         })
         .catch(err => {
           console.error('request-code error:', err);
-          btn.textContent = 'Send váttanarkóðu'; btn.disabled = false;
+          btn.textContent = 'Send Váttanarkóðu'; btn.disabled = false;
           alert('Tað eydnaðist ikki at senda kóðuna. Royn aftur.');
         });
     }
@@ -4416,7 +4416,7 @@
         <div id="sum-step-send">
           <div id="turnstile-widget" class="turnstile-box"></div>
           <div class="summary-actions">
-            <button class="summary-confirm" id="sendCodeBtn" onclick="requestCode()">Send váttanarkóðu</button>
+            <button class="summary-confirm" id="sendCodeBtn" onclick="requestCode()">Send Váttanarkóðu</button>
             <button class="summary-cancel" onclick="closeSummary()">Aftur til bíleggingina</button>
           </div>
         </div>
