@@ -785,13 +785,30 @@
     .turnstile-box { margin: 0; display: flex; justify-content: center; }
     .turnstile-box:empty { display: none; }
     .verify-hint { font-size: 14px; color: #6b6b60; margin: 0 0 12px; line-height: 1.4; }
-    .verify-input {
-      width: 100%; box-sizing: border-box; text-align: center;
-      font-size: 28px; letter-spacing: 8px; font-weight: 600;
-      padding: 14px 10px; border: 2px solid #cfcabb; border-radius: 12px;
-      background: #fff; color: #2b2b25; margin-bottom: 12px;
+    .verify-code-box {
+      display: flex;
+      justify-content: center;
+      gap: 8px;
+      border: 1.5px solid #cfcabb;
+      border-radius: 14px;
+      padding: 14px 12px;
+      background: #fff;
+      margin-bottom: 12px;
     }
-    .verify-input:focus { outline: none; border-color: #4a6340; }
+    .verify-digit {
+      width: 34px;
+      height: 44px;
+      text-align: center;
+      font-size: 26px;
+      font-weight: 600;
+      color: #2b2b25;
+      font-family: inherit;
+      background: transparent;
+      border: none;
+      border-bottom: 2px solid #cfcabb;
+      padding: 0;
+    }
+    .verify-digit:focus { outline: none; border-bottom-color: #4a6340; }
     .verify-error { color: #b5341f; font-size: 14px; margin: 0 0 12px; text-align: center; }
     .summary-cancel {
       width: 100%;
@@ -4242,13 +4259,14 @@
       })
         .then(async res => {
           const data = await res.json().catch(() => ({}));
-          btn.textContent = 'Send Váttanarkóðu'; btn.disabled = false;
+          btn.textContent = 'Send Váttanarkodu'; btn.disabled = false;
           if (res.ok && data.ok) {
             document.getElementById('verify-phone').textContent = fmt;
             document.getElementById('sum-step-send').style.display = 'none';
             document.getElementById('sum-step-verify').style.display = 'block';
-            const inp = document.getElementById('verify-code');
-            inp.value = ''; inp.focus();
+            clearVerifyCode();
+            const first = document.querySelector('#verify-code-box .verify-digit');
+            if (first) first.focus();
           } else {
             alert(orderErrorText(data.error));
             ensureTurnstile();
@@ -4256,7 +4274,7 @@
         })
         .catch(err => {
           console.error('request-code error:', err);
-          btn.textContent = 'Send Váttanarkóðu'; btn.disabled = false;
+          btn.textContent = 'Send Váttanarkodu'; btn.disabled = false;
           alert('Tað eydnaðist ikki at senda kóðuna. Royn aftur.');
         });
     }
@@ -4264,10 +4282,10 @@
     // Step 2 — verify the code; on success the order is sent and confirmed.
     function verifyOrder() {
       if (!pendingOrder) { backToReview(); return; }
-      const code = document.getElementById('verify-code').value.trim();
+      const code = getVerifyCode();
       const errEl = document.getElementById('verify-error');
       errEl.style.display = 'none';
-      if (!/^\d{6}$/.test(code)) { errEl.textContent = 'Skriva 6-tal kóðuna.'; errEl.style.display = 'block'; return; }
+      if (!/^\d{6}$/.test(code)) { errEl.textContent = 'Skriva 6-tal koduna.'; errEl.style.display = 'block'; return; }
 
       const btn = document.getElementById('verifyBtn');
       btn.textContent = 'Váttar…'; btn.disabled = true;
@@ -4311,6 +4329,32 @@
         case 'too_many_tries':   return 'Ov nógvar royndir. Far aftur og send eina nýggja kóðu.';
         default:                 return 'Nakað fór skeivt. Royn aftur.';
       }
+    }
+
+    // ── 6-box verification code input ──
+    function digitEls() { return Array.from(document.querySelectorAll('#verify-code-box .verify-digit')); }
+    function getVerifyCode() { return digitEls().map(d => d.value).join(''); }
+    function clearVerifyCode() { digitEls().forEach(d => d.value = ''); }
+    function onDigitInput(el, idx) {
+      el.value = el.value.replace(/\D/g, '').slice(-1);
+      if (el.value && idx < 5) { const next = digitEls()[idx + 1]; if (next) next.focus(); }
+    }
+    function onDigitKey(e, el, idx) {
+      if (e.key === 'Backspace' && !el.value && idx > 0) {
+        const prev = digitEls()[idx - 1];
+        if (prev) { prev.value = ''; prev.focus(); }
+      } else if (e.key === 'Enter') {
+        verifyOrder();
+      }
+    }
+    function onDigitPaste(e) {
+      const txt = ((e.clipboardData || window.clipboardData).getData('text') || '').replace(/\D/g, '').slice(0, 6);
+      if (!txt) return;
+      e.preventDefault();
+      const els = digitEls();
+      txt.split('').forEach((c, i) => { if (els[i]) els[i].value = c; });
+      const focusIdx = Math.min(txt.length, 5);
+      if (els[focusIdx]) els[focusIdx].focus();
     }
 
     /* Close the confirmation screen and return to the front page */
@@ -4416,16 +4460,23 @@
         <div id="sum-step-send">
           <div id="turnstile-widget" class="turnstile-box"></div>
           <div class="summary-actions">
-            <button class="summary-confirm" id="sendCodeBtn" onclick="requestCode()">Send Váttanarkóðu</button>
+            <button class="summary-confirm" id="sendCodeBtn" onclick="requestCode()">Send Váttanarkodu</button>
             <button class="summary-cancel" onclick="closeSummary()">Aftur til bíleggingina</button>
           </div>
         </div>
 
         <!-- Step 2: enter the code from the SMS -->
         <div id="sum-step-verify" style="display:none;">
-          <p class="summary-section-label">Vátta við kóðu</p>
-          <p class="verify-hint">Vit sendu ein kóða til <strong id="verify-phone"></strong>. Skriva kóðuna her fyri at staðfesta bíleggingina.</p>
-          <input id="verify-code" class="verify-input" type="text" inputmode="numeric" maxlength="6" placeholder="000000" autocomplete="one-time-code" />
+          <p class="summary-section-label">Vátta við kodu</p>
+          <p class="verify-hint">Vit senda ein kodu til <strong id="verify-phone"></strong>. Skriva koduna her fyri at staðfesta bíleggingina.</p>
+          <div class="verify-code-box" id="verify-code-box">
+            <input class="verify-digit" type="text" inputmode="numeric" maxlength="1" autocomplete="one-time-code" aria-label="Tal 1" oninput="onDigitInput(this,0)" onkeydown="onDigitKey(event,this,0)" onpaste="onDigitPaste(event)" />
+            <input class="verify-digit" type="text" inputmode="numeric" maxlength="1" aria-label="Tal 2" oninput="onDigitInput(this,1)" onkeydown="onDigitKey(event,this,1)" />
+            <input class="verify-digit" type="text" inputmode="numeric" maxlength="1" aria-label="Tal 3" oninput="onDigitInput(this,2)" onkeydown="onDigitKey(event,this,2)" />
+            <input class="verify-digit" type="text" inputmode="numeric" maxlength="1" aria-label="Tal 4" oninput="onDigitInput(this,3)" onkeydown="onDigitKey(event,this,3)" />
+            <input class="verify-digit" type="text" inputmode="numeric" maxlength="1" aria-label="Tal 5" oninput="onDigitInput(this,4)" onkeydown="onDigitKey(event,this,4)" />
+            <input class="verify-digit" type="text" inputmode="numeric" maxlength="1" aria-label="Tal 6" oninput="onDigitInput(this,5)" onkeydown="onDigitKey(event,this,5)" />
+          </div>
           <div id="verify-error" class="verify-error" style="display:none;"></div>
           <div class="summary-actions">
             <button class="summary-confirm" id="verifyBtn" onclick="verifyOrder()">Vátta bílegging ✓</button>
