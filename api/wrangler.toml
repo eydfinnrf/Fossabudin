@@ -1,6 +1,9 @@
 name = "fossabudin-api"
 main = "src/catalog-api.js"
 compatibility_date = "2026-07-17"
+# Keep the *.workers.dev route ON — the customer site fetches /catalog from it.
+# (Adding a custom domain silently disables workers.dev unless this is set.)
+workers_dev = true
 
 # Public GET /catalog is open (read-only, no secrets).
 # Admin writes require:  Authorization: Bearer <ADMIN_TOKEN>
