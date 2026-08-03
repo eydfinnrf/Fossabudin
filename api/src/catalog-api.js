@@ -87,6 +87,11 @@ export default {
 
     if (method === "OPTIONS") return new Response(null, { status: 204, headers: cors() });
 
+    // On the admin hostname, send the bare root straight to the login page.
+    if (url.hostname === "admin.fossabudin.fo" && path === "/" && method === "GET") {
+      return Response.redirect(url.origin + "/admin", 302);
+    }
+
     // ---- public ----
     if (path === "/catalog" && method === "GET") {
       try {

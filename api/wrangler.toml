@@ -17,3 +17,7 @@ database_id = "24c379b2-3544-4c96-954c-2f34e2773e29"
 [[rules]]
 type = "Text"
 globs = ["**/*.html"]
+
+[[routes]]
+pattern = "admin.fossabudin.fo"
+custom_domain = true
