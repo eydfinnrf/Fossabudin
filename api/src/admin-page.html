@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+<html lang="fo">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta name="robots" content="noindex, nofollow" />
+<title>Fossábúðin · Vørustýring</title>
+<style>
+  :root {
+    --bg: #f6f3ec; --card: #fff; --ink: #2b2620; --bark: #7a6f5f;
+    --line: #e4ddd0; --green: #3f6b4a; --green-lt: #eaf1ea;
+    --red: #b0202f; --red-lt: #fbeced; --stone: #cbbfae;
+    --shadow: 0 1px 3px rgba(0,0,0,.06), 0 6px 20px rgba(0,0,0,.04);
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--bg); color: var(--ink);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    font-size: 16px; line-height: 1.4;
+  }
+  header {
+    position: sticky; top: 0; z-index: 5; background: var(--bg);
+    border-bottom: 1px solid var(--line); padding: .8rem 1rem;
+    display: flex; align-items: center; gap: .6rem;
+  }
+  header h1 { font-size: 1.05rem; margin: 0; font-weight: 700; flex: 1; }
+  header .sub { color: var(--bark); font-weight: 400; font-size: .8rem; }
+  .wrap { max-width: 720px; margin: 0 auto; padding: 1rem; }
+  button { font: inherit; cursor: pointer; border-radius: 9px; border: 1px solid var(--line); background: var(--card); color: var(--ink); padding: .5rem .8rem; }
+  button:active { transform: translateY(1px); }
+  .btn-primary { background: var(--green); color: #fff; border-color: var(--green); }
+  .btn-ghost { background: transparent; }
+  .btn-sm { padding: .3rem .55rem; font-size: .85rem; }
+  .icon-btn { border: none; background: transparent; padding: .3rem .45rem; font-size: 1rem; }
+  input[type=text], input[type=password] {
+    font: inherit; width: 100%; padding: .65rem .7rem; border: 1px solid var(--line);
+    border-radius: 9px; background: #fff; color: var(--ink);
+  }
+  input:focus { outline: 2px solid var(--green-lt); border-color: var(--green); }
+
+  /* login */
+  #login { max-width: 360px; margin: 12vh auto; padding: 1.5rem; background: var(--card); border-radius: 14px; box-shadow: var(--shadow); }
+  #login h2 { margin: 0 0 .3rem; font-size: 1.2rem; }
+  #login p { margin: 0 0 1rem; color: var(--bark); font-size: .9rem; }
+  #login button { width: 100%; margin-top: .8rem; }
+  .login-err { color: var(--red); font-size: .85rem; margin-top: .6rem; display: none; }
+
+  .toolbar { display: flex; gap: .5rem; margin-bottom: 1rem; flex-wrap: wrap; }
+  .toolbar .search { flex: 1; min-width: 160px; }
+
+  .cat {
+    background: var(--card); border: 1px solid var(--line); border-radius: 12px;
+    margin-bottom: .7rem; overflow: hidden; box-shadow: var(--shadow);
+  }
+  .cat-head { display: flex; align-items: center; gap: .55rem; padding: .7rem .8rem; }
+  .cat-emoji { font-size: 1.25rem; }
+  .cat-name { font-weight: 600; flex: 1; }
+  .cat-count { color: var(--bark); font-size: .8rem; }
+  .cat.hidden-group .cat-name { color: var(--bark); text-decoration: line-through; }
+  .chev { transition: transform .2s; color: var(--bark); }
+  .cat.open .chev { transform: rotate(90deg); }
+  .cat-body { display: none; border-top: 1px solid var(--line); padding: .5rem .8rem .8rem; }
+  .cat.open .cat-body { display: block; }
+  .cat-actions { display: flex; gap: .4rem; margin: .3rem 0 .7rem; flex-wrap: wrap; }
+
+  .item { display: flex; align-items: center; gap: .5rem; padding: .45rem 0; border-bottom: 1px dashed var(--line); }
+  .item:last-child { border-bottom: none; }
+  .item-name { flex: 1; }
+  .item.out .item-name { color: var(--bark); text-decoration: line-through; }
+  .badge { font-size: .68rem; padding: .12rem .4rem; border-radius: 999px; font-weight: 600; }
+  .badge-out { background: var(--red-lt); color: var(--red); }
+
+  /* switch */
+  .sw { position: relative; width: 44px; height: 26px; flex: none; }
+  .sw input { opacity: 0; width: 0; height: 0; }
+  .sw span { position: absolute; inset: 0; background: #cfc7b8; border-radius: 999px; transition: .18s; }
+  .sw span::before { content: ""; position: absolute; height: 20px; width: 20px; left: 3px; top: 3px; background: #fff; border-radius: 50%; transition: .18s; box-shadow: 0 1px 2px rgba(0,0,0,.25); }
+  .sw input:checked + span { background: var(--green); }
+  .sw input:checked + span::before { transform: translateX(18px); }
+
+  .muted { color: var(--bark); }
+  .empty { text-align: center; color: var(--bark); padding: 2rem 0; }
+
+  /* modal */
+  .modal-bg { position: fixed; inset: 0; background: rgba(0,0,0,.35); display: none; align-items: center; justify-content: center; z-index: 20; padding: 1rem; }
+  .modal-bg.show { display: flex; }
+  .modal { background: var(--card); border-radius: 14px; padding: 1.2rem; width: 100%; max-width: 380px; box-shadow: var(--shadow); }
+  .modal h3 { margin: 0 0 .8rem; font-size: 1.05rem; }
+  .modal .row { display: flex; gap: .5rem; margin-bottom: .7rem; }
+  .modal .row .emoji { width: 68px; text-align: center; }
+  .modal-actions { display: flex; gap: .5rem; justify-content: flex-end; margin-top: .4rem; }
+
+  /* toast */
+  #toast { position: fixed; left: 50%; bottom: 1.2rem; transform: translateX(-50%) translateY(2rem); background: var(--ink); color: #fff; padding: .6rem 1rem; border-radius: 10px; opacity: 0; transition: .25s; z-index: 30; font-size: .9rem; }
+  #toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+  #toast.err { background: var(--red); }
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="login">
+  <h2>Vørustýring</h2>
+  <p>Rita inn við tínum loyniorði fyri at broyta vørur og goymslu.</p>
+  <input type="password" id="pw" placeholder="Loyniorð" autocomplete="current-password" />
+  <button class="btn-primary" id="loginBtn">Rita inn</button>
+  <div class="login-err" id="loginErr">Skeivt loyniorð. Royn aftur.</div>
+</div>
+
+<!-- APP -->
+<div id="app" style="display:none">
+  <header>
+    <div style="flex:1">
+      <h1>Fossábúðin <span class="sub">· vørustýring</span></h1>
+    </div>
+    <button class="btn-ghost btn-sm" id="refreshBtn">↻ Dagfør</button>
+    <button class="btn-ghost btn-sm" id="logoutBtn">Rita út</button>
+  </header>
+  <div class="wrap">
+    <div class="toolbar">
+      <input type="text" class="search" id="search" placeholder="Leita eftir vøru ella bólki…" />
+      <button class="btn-primary" id="addCatBtn">+ Nýggjur bólkur</button>
+    </div>
+    <div id="list"></div>
+  </div>
+</div>
+
+<!-- MODAL -->
+<div class="modal-bg" id="modalBg">
+  <div class="modal">
+    <h3 id="modalTitle"></h3>
+    <div class="row">
+      <input type="text" class="emoji" id="modalEmoji" placeholder="🛒" maxlength="4" style="display:none" />
+      <input type="text" id="modalInput" placeholder="Navn" />
+    </div>
+    <div class="modal-actions">
+      <button class="btn-ghost" id="modalCancel">Avlýs</button>
+      <button class="btn-primary" id="modalOk">Goym</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+const API = location.origin;
+const TOKEN_KEY = "fb_admin_token";
+let token = sessionStorage.getItem(TOKEN_KEY) || "";
+let catalog = [];
+let openCats = new Set();   // category ids the user has expanded (kept across re-renders)
+
+/* ---------- helpers ---------- */
+function toast(msg, isErr) {
+  const t = document.getElementById("toast");
+  t.textContent = msg; t.className = "show" + (isErr ? " err" : "");
+  setTimeout(() => (t.className = ""), 2200);
+}
+async function api(path, opts = {}) {
+  const res = await fetch(API + path, {
+    ...opts,
+    headers: { "content-type": "application/json", "authorization": "Bearer " + token, ...(opts.headers || {}) },
+  });
+  if (res.status === 401) { logout(); throw new Error("unauthorized"); }
+  const data = await res.json().catch(() => ({ ok: false }));
+  if (!data.ok) throw new Error(data.error || "villa");
+  return data;
+}
+function esc(s) { const d = document.createElement("div"); d.textContent = s == null ? "" : s; return d.innerHTML; }
+
+/* ---------- modal (text + optional emoji) ---------- */
+function askText({ title, value = "", emoji = null, placeholder = "Navn" }) {
+  return new Promise(resolve => {
+    const bg = document.getElementById("modalBg");
+    document.getElementById("modalTitle").textContent = title;
+    const input = document.getElementById("modalInput");
+    const em = document.getElementById("modalEmoji");
+    input.value = value; input.placeholder = placeholder;
+    if (emoji === null) { em.style.display = "none"; }
+    else { em.style.display = "block"; em.value = emoji; }
+    bg.classList.add("show"); setTimeout(() => input.focus(), 50);
+    const done = (val) => { bg.classList.remove("show"); cleanup(); resolve(val); };
+    const ok = () => { const name = input.value.trim(); if (!name) return; done({ name, emoji: emoji === null ? undefined : (em.value.trim() || null) }); };
+    const cancel = () => done(null);
+    function key(e) { if (e.key === "Enter") ok(); if (e.key === "Escape") cancel(); }
+    function cleanup() {
+      document.getElementById("modalOk").onclick = null;
+      document.getElementById("modalCancel").onclick = null;
+      input.removeEventListener("keydown", key); em.removeEventListener("keydown", key);
+    }
+    document.getElementById("modalOk").onclick = ok;
+    document.getElementById("modalCancel").onclick = cancel;
+    input.addEventListener("keydown", key); em.addEventListener("keydown", key);
+  });
+}
+
+/* ---------- auth ---------- */
+async function tryLogin(pw) {
+  token = pw;
+  await api("/admin/catalog");           // 401 throws -> caught by caller
+  sessionStorage.setItem(TOKEN_KEY, pw);
+}
+function logout() {
+  token = ""; sessionStorage.removeItem(TOKEN_KEY);
+  document.getElementById("app").style.display = "none";
+  document.getElementById("login").style.display = "block";
+}
+
+/* ---------- data ---------- */
+async function load() {
+  const data = await api("/admin/catalog");
+  catalog = data.catalog || [];
+  render();
+}
+
+/* Each category currently has one product; treat category+product[0] as a group. */
+function groupProduct(cat) { return (cat.products && cat.products[0]) || null; }
+
+/* ---------- render ---------- */
+function render() {
+  const q = document.getElementById("search").value.trim().toLowerCase();
+  const list = document.getElementById("list");
+  list.innerHTML = "";
+  let shown = 0;
+
+  catalog.forEach(cat => {
+    const prod = groupProduct(cat);
+    const items = prod ? (prod.sub_items || []) : [];
+    const matchCat = q === "" || cat.name.toLowerCase().includes(q);
+    const matchItems = items.filter(s => q === "" || s.name.toLowerCase().includes(q));
+    if (q !== "" && !matchCat && matchItems.length === 0) return;
+    shown++;
+
+    const visibleItems = (q !== "" && !matchCat) ? matchItems : items;
+    const groupHidden = prod && !prod.in_stock;
+
+    const el = document.createElement("div");
+    const isOpen = q !== "" || openCats.has(cat.id);
+    el.className = "cat" + (isOpen ? " open" : "") + (groupHidden ? " hidden-group" : "");
+
+    const head = document.createElement("div");
+    head.className = "cat-head";
+    head.innerHTML =
+      '<span class="cat-emoji">' + esc(cat.emoji || "🛒") + '</span>' +
+      '<span class="cat-name">' + esc(cat.name) + '</span>' +
+      '<span class="cat-count">' + items.length + ' vørur</span>' +
+      '<span class="chev">›</span>';
+    head.onclick = () => {
+      const nowOpen = el.classList.toggle("open");
+      if (nowOpen) openCats.add(cat.id); else openCats.delete(cat.id);
+    };
+    el.appendChild(head);
+
+    const body = document.createElement("div");
+    body.className = "cat-body";
+
+    // group-level actions
+    const actions = document.createElement("div");
+    actions.className = "cat-actions";
+    actions.innerHTML =
+      '<button class="btn-sm">' + (groupHidden ? "👁 Vís bólk" : "🚫 Fjal bólk") + '</button>' +
+      '<button class="btn-sm">✏️ Broyt navn</button>' +
+      '<button class="btn-sm">＋ Vøra</button>' +
+      '<button class="btn-sm" style="color:var(--red)">🗑 Strika bólk</button>';
+    const [hideBtn, renameBtn, addBtn, delBtn] = actions.querySelectorAll("button");
+    hideBtn.onclick = (e) => { e.stopPropagation(); if (prod) toggleStock("product", prod.id, !prod.in_stock); };
+    renameBtn.onclick = (e) => { e.stopPropagation(); renameGroup(cat, prod); };
+    addBtn.onclick = (e) => { e.stopPropagation(); addItem(cat, prod); };
+    delBtn.onclick = (e) => { e.stopPropagation(); deleteGroup(cat); };
+    body.appendChild(actions);
+
+    // items
+    if (visibleItems.length === 0) {
+      const p = document.createElement("p");
+      p.className = "muted"; p.style.fontSize = ".9rem"; p.textContent = "Ongar vørur enn.";
+      body.appendChild(p);
+    }
+    visibleItems.forEach(sub => body.appendChild(itemRow(sub)));
+
+    el.appendChild(body);
+    list.appendChild(el);
+  });
+
+  if (shown === 0) {
+    list.innerHTML = '<p class="empty">' + (q ? "Einki funnið." : "Ongir bólkar enn. Legg ein afturat.") + '</p>';
+  }
+}
+
+function itemRow(sub) {
+  const row = document.createElement("div");
+  row.className = "item" + (sub.in_stock ? "" : " out");
+  const badge = sub.in_stock ? "" : '<span class="badge badge-out">Uppselt</span>';
+  row.innerHTML =
+    '<label class="sw"><input type="checkbox" ' + (sub.in_stock ? "checked" : "") + '><span></span></label>' +
+    '<span class="item-name">' + esc(sub.name) + '</span>' + badge +
+    '<button class="icon-btn" title="Broyt navn">✏️</button>' +
+    '<button class="icon-btn" title="Strika">🗑</button>';
+  const cb = row.querySelector("input");
+  const [renameB, delB] = row.querySelectorAll(".icon-btn");
+  cb.onchange = () => toggleStock("sub_item", sub.id, cb.checked);
+  renameB.onclick = () => renameItem(sub);
+  delB.onclick = () => deleteItem(sub);
+  return row;
+}
+
+/* ---------- actions ---------- */
+async function toggleStock(kind, id, inStock) {
+  try {
+    await api("/admin/toggle", { method: "POST", body: JSON.stringify({ kind, id, in_stock: inStock ? 1 : 0 }) });
+    // update local state
+    catalog.forEach(cat => {
+      const prod = groupProduct(cat); if (!prod) return;
+      if (kind === "product" && prod.id === id) prod.in_stock = inStock;
+      (prod.sub_items || []).forEach(s => { if (kind === "sub_item" && s.id === id) s.in_stock = inStock; });
+    });
+    render();
+    toast(inStock ? "Sett til áfylt" : "Sett til uppselt");
+  } catch (e) { toast("Villa: " + e.message, true); load(); }
+}
+
+async function addItem(cat, prod) {
+  const r = await askText({ title: "Legg vøru afturat “" + cat.name + "”", placeholder: "T.d. Bónda mjólk 1L" });
+  if (!r) return;
+  try {
+    let productId = prod && prod.id;
+    if (!productId) { // category has no product yet — create one matching the category
+      const p = await api("/admin/product", { method: "POST", body: JSON.stringify({ category_id: cat.id, name: cat.name, emoji: cat.emoji, type: "expandable" }) });
+      productId = p.id;
+    }
+    await api("/admin/sub-item", { method: "POST", body: JSON.stringify({ product_id: productId, name: r.name }) });
+    toast("Vøra løgd afturat"); await load();
+  } catch (e) { toast("Villa: " + e.message, true); }
+}
+
+async function renameItem(sub) {
+  const r = await askText({ title: "Broyt navn", value: sub.name });
+  if (!r) return;
+  try { await api("/admin/sub-item/" + sub.id, { method: "PATCH", body: JSON.stringify({ name: r.name }) }); toast("Broytt"); await load(); }
+  catch (e) { toast("Villa: " + e.message, true); }
+}
+
+async function deleteItem(sub) {
+  if (!confirm("Strika “" + sub.name + "”?")) return;
+  try { await api("/admin/sub-item/" + sub.id, { method: "DELETE" }); toast("Strikað"); await load(); }
+  catch (e) { toast("Villa: " + e.message, true); }
+}
+
+async function renameGroup(cat, prod) {
+  const r = await askText({ title: "Broyt bólk", value: cat.name, emoji: cat.emoji || "" });
+  if (!r) return;
+  try {
+    await api("/admin/category/" + cat.id, { method: "PATCH", body: JSON.stringify({ name: r.name, emoji: r.emoji }) });
+    if (prod) await api("/admin/product/" + prod.id, { method: "PATCH", body: JSON.stringify({ name: r.name, emoji: r.emoji }) });
+    toast("Broytt"); await load();
+  } catch (e) { toast("Villa: " + e.message, true); }
+}
+
+async function deleteGroup(cat) {
+  if (!confirm("Strika bólkin “" + cat.name + "” og allar vørur í honum?")) return;
+  try { await api("/admin/category/" + cat.id, { method: "DELETE" }); toast("Bólkur strikaður"); await load(); }
+  catch (e) { toast("Villa: " + e.message, true); }
+}
+
+async function addCategory() {
+  const r = await askText({ title: "Nýggjur bólkur", emoji: "🛒", placeholder: "T.d. Frukt" });
+  if (!r) return;
+  try {
+    const c = await api("/admin/category", { method: "POST", body: JSON.stringify({ name: r.name, emoji: r.emoji }) });
+    await api("/admin/product", { method: "POST", body: JSON.stringify({ category_id: c.id, name: r.name, emoji: r.emoji, type: "expandable" }) });
+    toast("Bólkur stovnaður"); await load();
+  } catch (e) { toast("Villa: " + e.message, true); }
+}
+
+/* ---------- wire up ---------- */
+document.getElementById("loginBtn").onclick = async () => {
+  const pw = document.getElementById("pw").value.trim();
+  if (!pw) return;
+  try {
+    await tryLogin(pw);
+    document.getElementById("login").style.display = "none";
+    document.getElementById("app").style.display = "block";
+    await load();
+  } catch (e) {
+    document.getElementById("loginErr").style.display = "block";
+  }
+};
+document.getElementById("pw").addEventListener("keydown", e => { if (e.key === "Enter") document.getElementById("loginBtn").click(); });
+document.getElementById("logoutBtn").onclick = logout;
+document.getElementById("refreshBtn").onclick = () => load().then(() => toast("Dagført"));
+document.getElementById("addCatBtn").onclick = addCategory;
+document.getElementById("search").addEventListener("input", render);
+
+/* auto-enter if a token is already in this browser session */
+(async () => {
+  if (!token) return;
+  try {
+    await api("/admin/catalog");
+    document.getElementById("login").style.display = "none";
+    document.getElementById("app").style.display = "block";
+    await load();
+  } catch (e) { logout(); }
+})();
+</script>
+</body>
+</html>

@@ -18,6 +18,8 @@
  * All customer-facing names are Faroese — pass them through unchanged.
  */
 
+import ADMIN_HTML from "./admin-page.html";
+
 const json = (data, status = 200, extra = {}) =>
   new Response(JSON.stringify(data), {
     status,
@@ -101,7 +103,15 @@ export default {
       return json({ ok: true, service: "fossabudin-api", endpoints: ["/catalog"] });
     }
 
-    // ---- admin (token required) ----
+    // Admin UI page — public HTML (a login screen); every ACTION it performs
+    // still requires the bearer token, so serving the page is harmless.
+    if (path === "/admin" && method === "GET") {
+      return new Response(ADMIN_HTML, {
+        headers: { "content-type": "text/html; charset=utf-8", "cache-control": "no-cache", ...cors() },
+      });
+    }
+
+    // ---- admin API (token required) ----
     if (path.startsWith("/admin")) {
       if (!authed(request, env)) return json({ ok: false, error: "unauthorized" }, 401);
       try {
@@ -181,15 +191,43 @@ async function handleAdmin(path, method, request, env) {
     return json({ ok: true });
   }
 
+  const patchCat = path.match(/^\/admin\/category\/(\d+)$/);
+  if (patchCat && method === "PATCH") {
+    const id = Number(patchCat[1]);
+    const sets = [], vals = [];
+    if (body.name != null) { sets.push("name = ?"); vals.push(body.name); }
+    if (body.emoji !== undefined) { sets.push("emoji = ?"); vals.push(body.emoji); }
+    if (!sets.length) return json({ ok: false, error: "nothing to update" }, 400);
+    vals.push(id);
+    await env.DB.prepare(`UPDATE categories SET ${sets.join(", ")} WHERE id = ?`).bind(...vals).run();
+    return json({ ok: true });
+  }
+
+  // Deletes remove children explicitly (D1 does not enforce FK cascade by default).
   const delProd = path.match(/^\/admin\/product\/(\d+)$/);
   if (delProd && method === "DELETE") {
-    await env.DB.prepare("DELETE FROM products WHERE id = ?").bind(Number(delProd[1])).run();
+    const id = Number(delProd[1]);
+    await env.DB.batch([
+      env.DB.prepare("DELETE FROM sub_items WHERE product_id = ?").bind(id),
+      env.DB.prepare("DELETE FROM products WHERE id = ?").bind(id),
+    ]);
     return json({ ok: true });
   }
 
   const delSub = path.match(/^\/admin\/sub-item\/(\d+)$/);
   if (delSub && method === "DELETE") {
     await env.DB.prepare("DELETE FROM sub_items WHERE id = ?").bind(Number(delSub[1])).run();
+    return json({ ok: true });
+  }
+
+  const delCat = path.match(/^\/admin\/category\/(\d+)$/);
+  if (delCat && method === "DELETE") {
+    const id = Number(delCat[1]);
+    await env.DB.batch([
+      env.DB.prepare("DELETE FROM sub_items WHERE product_id IN (SELECT id FROM products WHERE category_id = ?)").bind(id),
+      env.DB.prepare("DELETE FROM products WHERE category_id = ?").bind(id),
+      env.DB.prepare("DELETE FROM categories WHERE id = ?").bind(id),
+    ]);
     return json({ ok: true });
   }
 

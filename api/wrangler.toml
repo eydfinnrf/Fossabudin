@@ -12,3 +12,8 @@ ALLOWED_ORIGIN = "*"
 binding = "DB"
 database_name = "fossabudin-catalog"
 database_id = "24c379b2-3544-4c96-954c-2f34e2773e29"
+
+# Let the Worker import the admin page HTML as a string module.
+[[rules]]
+type = "Text"
+globs = ["**/*.html"]
