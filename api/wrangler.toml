@@ -1,0 +1,14 @@
+name = "fossabudin-api"
+main = "src/catalog-api.js"
+compatibility_date = "2026-07-17"
+
+# Public GET /catalog is open (read-only, no secrets).
+# Admin writes require:  Authorization: Bearer <ADMIN_TOKEN>
+# Set the secret with:   wrangler secret put ADMIN_TOKEN --config ./wrangler.toml
+[vars]
+ALLOWED_ORIGIN = "*"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "fossabudin-catalog"
+database_id = "24c379b2-3544-4c96-954c-2f34e2773e29"

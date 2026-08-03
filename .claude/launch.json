@@ -3,8 +3,8 @@
   "configurations": [
     {
       "name": "fossabudin",
-      "runtimeExecutable": "bash",
-      "runtimeArgs": ["-c", "cd /Users/eydfinn/Documents/Fossabudin && ruby -run -e httpd . -p $PORT"],
+      "runtimeExecutable": "python3",
+      "runtimeArgs": ["-m", "http.server", "$PORT", "--directory", "/Users/eydfinn/Documents/Agent workspace/Fossabudin"],
       "port": 3456,
       "autoPort": true
     }
