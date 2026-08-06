@@ -75,7 +75,7 @@ async function handleRequestCode(request, env, cors) {
   await kv.put('code:' + p, JSON.stringify(rec), { expirationTtl: Math.ceil(CODE_TTL_MS / 1000) + 60 });
 
   await sendSms(env, p,
-    `Fossábúðin: Tín váttanarkóði er ${code}. Koðin er galdandi í 10 minuttir.`);
+    `Tín váttanarkoda er ${code}. Kodan er galdandi í 10 minuttir.`);
 
   return json({ ok: true }, 200, cors);
 }
