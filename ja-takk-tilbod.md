@@ -393,15 +393,18 @@ stock toggles.
 
 ## 9. Open items
 
-- [ ] **Delete the 4 demo offers** — owner has to do this in admin.fossabudin.fo
-      (see §6: the local admin token and the wrangler D1 scope are both expired)
+- [x] **Demo offers deleted** — owner cleared them all on 7 Aug before release;
+      `/offers` returns `count: 0`, the correct resting state
 - [x] Commit and push to `dev` — `2b5e4df`
 - [x] Eyeball the section on the deployed dev site, mobile and tablet (see §5)
 - [x] Show offers in the ordering list as well — `4b3c236` (§4.8), verified live
       on `fossabudin-dev.eydfinn-rajani-faroe.workers.dev`
 - [ ] Decide whether an already-open page should pick up offer changes without a
       reload (polling `/offers`), or whether next-load is enough — see §4.8
-- [ ] Owner approves merge `dev` → `main` for production
+- [x] Owner approved merge `dev` → `main` — shipped 7 Aug, fast-forward to
+      `b72addf`, production version `7caba1c7`
+- Production stays behind the Cloudflare Access wall **on purpose** — owner
+  confirmed 7 Aug. Not a fault; leave it alone until they decide to open the shop
 
 ### Noticed, not acted on
 

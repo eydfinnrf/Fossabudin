@@ -278,17 +278,35 @@ row.
 
 ## 5. Open items
 
-- [ ] **Confirm and delete the demo offers** — `Heil breyð` (id 3) and `Danbo`
-      (id 4) have invented prices. Owner does this at admin.fossabudin.fo.
-- [ ] **Fix `api/admin-token.local.txt`** — currently 401s, which also blocks
-      Charlie. (§3.1)
+- [x] **Demo offers deleted** — owner cleared all of them on 7 Aug before the
+      release. `/offers` now returns `count: 0`, which is the correct resting
+      state. Real offers get added in admin when the shop runs one.
+- [x] **Owner approved and shipped `dev` → `main`** on 7 Aug — fast-forward to
+      `b72addf`, 12 commits, production version `7caba1c7` built 12:10:20 UTC.
+      All four hostnames unchanged before and after (302/302/302/200).
+- **Production stays behind the Cloudflare Access wall — deliberately.** Owner
+  confirmed on 7 Aug that this is fine for now, so **do not treat it as a fault
+  and do not try to remove it.** fossabudin.fo 302s every visitor to
+  `eydfinn-rajani-faroe.cloudflareaccess.com`; the code is live and correct
+  behind it. When the owner does decide to open the shop, they remove
+  fossabudin.fo and www from the Access app in the Zero Trust dashboard — the
+  OAuth token cannot manage Access apps, so no agent can do it anyway.
+- [ ] **Fix `api/admin-token.local.txt`** — still 401 as of 7 Aug 12:05, which
+      also blocks Charlie. (§3.1)
 - [ ] **Restore wrangler's D1 scope** — `npx wrangler login`. (§3.2)
-- [ ] **Owner approves merging `dev` → `main`** for production. 9 commits.
-- [ ] **Production is still behind the Cloudflare Access wall** — customers
-      cannot see the shop at all until the owner removes fossabudin.fo and www
-      from the Access app in the Zero Trust dashboard. The OAuth token cannot
-      manage Access apps, so this is owner-only.
 - [ ] Optional: check whether Workers Builds is reliably healthy again. (§3.3)
+      On 7 Aug it behaved: dev built ~1 min after the push, prod ~2 min.
+
+### Verification the Access wall blocked
+
+Production serves HTML that **was never read back**. `fossabudin.fo` and
+`fossabudin.eydfinn-rajani-faroe.workers.dev` both 302 to the Access login, and
+the version metadata records `Source: Unknown (version_upload)` — no git commit.
+So the proof that production runs the right code is indirect: `main` and `dev`
+are the identical commit `b72addf`, the same build ran on both, the dev site was
+read back and confirmed correct, and prod's only deploy since 6 Aug landed two
+minutes after the `main` push. **Once the Access wall comes off, read
+fossabudin.fo back and confirm directly.**
 
 ---
 
