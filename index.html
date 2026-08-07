@@ -1136,17 +1136,17 @@
     }
 
     /* ── GALLERY ─────────────────────────────── */
-    /* ── TILBOÐ ────────────────────────────────── */
-    #tilbod {
+    /* ── JA TAKK TILBOÐ ────────────────────────── */
+    #jatakk {
       background: var(--cream);
     }
 
-    .tilbod-inner {
+    .jatakk-inner {
       max-width: 1000px;
       margin: 0 auto;
     }
 
-    .tilbod-grid {
+    .jatakk-grid {
       display: flex;
       flex-direction: row;
       gap: 1.2rem;
@@ -1159,20 +1159,20 @@
       scrollbar-color: var(--stone) transparent;
     }
 
-    .tilbod-grid::-webkit-scrollbar {
+    .jatakk-grid::-webkit-scrollbar {
       height: 5px;
     }
 
-    .tilbod-grid::-webkit-scrollbar-track {
+    .jatakk-grid::-webkit-scrollbar-track {
       background: transparent;
     }
 
-    .tilbod-grid::-webkit-scrollbar-thumb {
+    .jatakk-grid::-webkit-scrollbar-thumb {
       background: var(--stone);
       border-radius: 10px;
     }
 
-    .tilbod-card {
+    .jatakk-card {
       background: #fff;
       border: 1.5px solid var(--warm);
       border-radius: 10px;
@@ -1183,7 +1183,7 @@
       scroll-snap-align: start;
     }
 
-    .tilbod-img {
+    .jatakk-img {
       width: 100%;
       aspect-ratio: 4/3;
       object-fit: cover;
@@ -1196,7 +1196,7 @@
       min-height: 180px;
     }
 
-    .tilbod-body {
+    .jatakk-body {
       padding: 1rem 1.1rem 1.2rem;
       display: flex;
       flex-direction: column;
@@ -1204,28 +1204,21 @@
       flex: 1;
     }
 
-    .tilbod-name {
+    .jatakk-name {
       font-family: 'Playfair Display', serif;
       font-size: 1rem;
       font-weight: 600;
       color: var(--ink);
     }
 
-    .tilbod-desc {
-      font-size: .83rem;
-      color: var(--bark);
-      font-weight: 300;
-      line-height: 1.5;
-    }
-
-    .tilbod-pricing {
+    .jatakk-pricing {
       display: flex;
       align-items: center;
       gap: .6rem;
       margin-top: .5rem;
     }
 
-    .tilbod-badge {
+    .jatakk-badge {
       background: var(--green);
       color: #fff;
       font-size: .7rem;
@@ -1235,16 +1228,24 @@
       border-radius: 20px;
     }
 
-    .tilbod-price-new {
+    .jatakk-price-new {
       font-size: 1.05rem;
       font-weight: 600;
       color: var(--green);
     }
 
-    .tilbod-price-old {
+    .jatakk-price-old {
       font-size: .83rem;
       color: var(--stone);
       text-decoration: line-through;
+    }
+
+    /* shown while loading, and when the shop has no offers running */
+    .jatakk-status {
+      margin-top: 2rem;
+      color: var(--bark);
+      font-weight: 300;
+      font-size: .95rem;
     }
 
     #galleri {
@@ -1589,6 +1590,17 @@
 
   <div class="divider"></div>
 
+  <!-- JA TAKK TILBOÐ — filled from the database (/offers), managed on admin.fossabudin.fo -->
+  <section id="jatakk">
+    <div class="jatakk-inner">
+      <h2 class="section-title">Ja Takk Tilboð</h2>
+      <div class="jatakk-grid" id="jatakk-grid" hidden></div>
+      <p class="jatakk-status" id="jatakk-status">Innlesur tilboð…</p>
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
   <!-- UPPLATINGARTÍÐIR -->
   <section id="tiding">
     <div class="tiding-inner">
@@ -1636,19 +1648,6 @@
   </section>
 
   <div class="divider"></div>
-
-  <!-- TILBOÐ REMOVED 2026-07-15 (charlie): "Viku tilboð" section hidden per owner request -->
-  <!--
-  <div class="divider"></div>
-
-  <section id="tilbod" style="padding: 5rem 5vw;">
-    <div class="tilbod-inner">
-      <p class="section-label">Tilboð</p>
-      <h2 class="section-title">Viku tilboð</h2>
-      <div class="tilbod-grid" id="tilbod-grid"></div>
-    </div>
-  </section>
-  -->
 
   <!-- UM OKKUM -->
   <section id="um">
@@ -1920,34 +1919,63 @@
     }
 
     /* ── Toggle product chip ── */
-    // ── TILBOÐ DATA ─────────────────────────────
-    // Edit this array to update both the offers page and the order section badges at once
-    const TILBOD = [
-      { emoji:'🥛', name:'Mjólk 1L',   desc:'Fersk daglig mjólk',     pct:20, priceNew:12,  priceOld:15,  orderParent:'Mjólk' },
-      { emoji:'🍞', name:'Breyð',      desc:'Nýbakt hvardagsbreyð',   pct:15, priceNew:17,  priceOld:20,  orderParent:'Breyð' },
-      { emoji:'🧀', name:'Ostur 400g', desc:'Føroyskur ostur',         pct:10, priceNew:45,  priceOld:50,  orderParent:'Ostur' },
-      { emoji:'🥚', name:'Egg 12 stk', desc:'Føroysk frítíðs egg',     pct:15, priceNew:34,  priceOld:40,  orderParent:'Egg',            orderSub:'12 stk' },
-      { emoji:'🥩', name:'Kjøt 500g',  desc:'Fersk føroyskur lamb',    pct:25, priceNew:75,  priceOld:100, orderParent:'Kjøt',           orderSub:'Lambakjøt' },
-      { emoji:'🥣', name:'Skyr 500g',  desc:'Náttúruligur skyr',       pct:20, priceNew:24,  priceOld:30,  orderParent:'Skyr / jogurt',  orderSub:'Náttúruligur skyr' },
-      { emoji:'🍎', name:'Eplir 1kg',  desc:'Ferskar eplir',           pct:10, priceNew:18,  priceOld:20,  orderParent:'Frukt',          orderSub:'Eplir' },
-    ];
+    /* ── JA TAKK TILBOÐ ──────────────────────────
+       Offers live in the database and are managed on admin.fossabudin.fo.
+       The cards are display only — they advertise, they don't order. */
+    const OFFERS_CACHE_KEY = 'fossabudin_offers_v1';
 
-    function renderTilbod() {
-      const grid = document.getElementById('tilbod-grid');
-      if (!grid) return;
-      grid.innerHTML = TILBOD.map(t => `
-        <div class="tilbod-card">
-          <div class="tilbod-img">${t.emoji}</div>
-          <div class="tilbod-body">
-            <div class="tilbod-name">${t.name}</div>
-            <div class="tilbod-desc">${t.desc}</div>
-            <div class="tilbod-pricing">
-              <span class="tilbod-badge">−${t.pct}%</span>
-              <span class="tilbod-price-new">${t.priceNew} kr</span>
-              <span class="tilbod-price-old">${t.priceOld} kr</span>
-            </div>
-          </div>
-        </div>`).join('');
+    /** "12 kr" for whole krónur, "12,50 kr" otherwise — Faroese decimal comma. */
+    function fmtKr(n) {
+      const v = Number(n);
+      if (!Number.isFinite(v)) return '';
+      return (Math.round(v * 100) % 100 === 0 ? String(Math.round(v)) : v.toFixed(2).replace('.', ',')) + ' kr';
+    }
+
+    function renderOffers(offers) {
+      const grid = document.getElementById('jatakk-grid');
+      const status = document.getElementById('jatakk-status');
+      if (!grid || !status) return;
+
+      if (!offers.length) {
+        grid.hidden = true;
+        grid.innerHTML = '';
+        status.hidden = false;
+        status.textContent = 'Onki Ja Takk Tilboð í løtuni';
+        return;
+      }
+
+      grid.innerHTML = '';
+      offers.forEach(o => {
+        const card = _el('div', 'jatakk-card');
+        card.appendChild(_el('div', 'jatakk-img', o.emoji || '🛒'));
+        const body = _el('div', 'jatakk-body');
+        body.appendChild(_el('div', 'jatakk-name', o.name));
+        const pricing = _el('div', 'jatakk-pricing');
+        if (o.pct != null) pricing.appendChild(_el('span', 'jatakk-badge', '−' + o.pct + '%'));
+        pricing.appendChild(_el('span', 'jatakk-price-new', fmtKr(o.price_new)));
+        pricing.appendChild(_el('span', 'jatakk-price-old', fmtKr(o.price_old)));
+        body.appendChild(pricing);
+        card.appendChild(body);
+        grid.appendChild(card);
+      });
+      grid.hidden = false;
+      status.hidden = true;
+    }
+
+    async function loadOffers() {
+      try {
+        const res = await fetch(CATALOG_API + '/offers');
+        const data = await res.json();
+        if (!data.ok) throw new Error(data.error || 'offers failed');
+        const offers = data.offers || [];
+        try { localStorage.setItem(OFFERS_CACHE_KEY, JSON.stringify(offers)); } catch (e) {}
+        renderOffers(offers);
+      } catch (e) {
+        // Offline / API down: fall back to the last list we saw, else say nothing is on.
+        let cached = null;
+        try { cached = JSON.parse(localStorage.getItem(OFFERS_CACHE_KEY) || 'null'); } catch (e2) {}
+        renderOffers(Array.isArray(cached) ? cached : []);
+      }
     }
 
     function toggleProduct(el) { el.classList.toggle('chosen'); }
@@ -2048,6 +2076,7 @@
     }
 
     document.addEventListener('DOMContentLoaded', loadCatalog);
+    document.addEventListener('DOMContentLoaded', loadOffers);
 
     function toggleExpand(btn) {
       btn.closest('.expandable-wrap').classList.toggle('open');
@@ -2468,9 +2497,6 @@
     // Always scroll to top on load/refresh
     window.addEventListener('load', () => window.scrollTo({ top: 0, behavior: 'instant' }));
     if (history.scrollRestoration) history.scrollRestoration = 'manual';
-
-    // Render tilboð cards on load
-    renderTilbod();
 
     updateBasketCount();
 

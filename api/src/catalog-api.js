@@ -3,6 +3,7 @@
  *
  * Public:
  *   GET  /catalog            -> in-stock catalog as nested JSON (for the website)
+ *   GET  /offers             -> active "Ja Takk Tilboð" offers (frontpage section)
  *
  * Admin (require  Authorization: Bearer <ADMIN_TOKEN>):
  *   GET  /admin/catalog      -> full catalog incl. out-of-stock items
@@ -14,6 +15,10 @@
  *   PATCH /admin/sub-item/:id-> { name? }
  *   DELETE /admin/product/:id
  *   DELETE /admin/sub-item/:id
+ *   GET  /admin/offers       -> all offers incl. switched-off ones
+ *   POST /admin/offer        -> { sub_item_id, price_old, price_new, emoji? }
+ *   PATCH /admin/offer/:id   -> { price_old?, price_new?, emoji?, active? }
+ *   DELETE /admin/offer/:id
  *
  * All customer-facing names are Faroese — pass them through unchanged.
  */
@@ -79,6 +84,61 @@ async function buildCatalog(env, onlyInStock) {
   return out;
 }
 
+/**
+ * Build the "Ja Takk Tilboð" list.
+ *
+ * The offer name/emoji come from the catalog at read time, so a rename in the
+ * catalog shows up here too. Offers are NOT filtered by in_stock — the owner
+ * chose to control them purely by hand (the switch / the bin), so an offer only
+ * disappears when it is switched off or deleted.
+ *
+ * onlyActive=true -> what the website shows; false -> the admin list.
+ */
+async function buildOffers(env, onlyActive) {
+  const where = onlyActive ? "WHERE o.active = 1" : "";
+  const rows = await env.DB.prepare(
+    `SELECT o.id, o.sub_item_id, o.price_old, o.price_new, o.active, o.sort_order,
+            COALESCE(o.emoji, p.emoji, c.emoji) AS emoji,
+            s.name AS name, s.in_stock AS in_stock,
+            o.emoji AS emoji_override,
+            c.name AS category_name
+       FROM offers o
+       JOIN sub_items  s ON s.id = o.sub_item_id
+       JOIN products   p ON p.id = s.product_id
+       JOIN categories c ON c.id = p.category_id
+       ${where}
+      ORDER BY o.sort_order, o.id`
+  ).all();
+
+  return rows.results.map(r => ({
+    id: r.id,
+    sub_item_id: r.sub_item_id,
+    name: r.name,
+    emoji: r.emoji,
+    emoji_override: r.emoji_override,
+    category_name: r.category_name,
+    price_old: r.price_old,
+    price_new: r.price_new,
+    pct: discountPct(r.price_old, r.price_new),
+    active: !!r.active,
+    in_stock: !!r.in_stock,
+  }));
+}
+
+/** Whole-number discount percent, or null when it wouldn't make sense. */
+function discountPct(oldP, newP) {
+  const o = Number(oldP), n = Number(newP);
+  if (!(o > 0) || !(n >= 0) || n >= o) return null;
+  return Math.round(((o - n) / o) * 100);
+}
+
+/** Parse a price typed by a Faroese user: accepts "12,50" as well as "12.50". */
+function parsePrice(v) {
+  if (v === null || v === undefined || v === "") return null;
+  const n = Number(String(v).replace(",", ".").trim());
+  return Number.isFinite(n) && n >= 0 ? n : null;
+}
+
 export default {
   async fetch(request, env) {
     const url = new URL(request.url);
@@ -104,8 +164,19 @@ export default {
       }
     }
 
+    if (path === "/offers" && method === "GET") {
+      try {
+        const offers = await buildOffers(env, true);
+        return json({ ok: true, offers }, 200, {
+          "cache-control": "public, max-age=60",
+        });
+      } catch (e) {
+        return json({ ok: false, error: String(e) }, 500);
+      }
+    }
+
     if (path === "/" && method === "GET") {
-      return json({ ok: true, service: "fossabudin-api", endpoints: ["/catalog"] });
+      return json({ ok: true, service: "fossabudin-api", endpoints: ["/catalog", "/offers"] });
     }
 
     // Admin UI page — public HTML (a login screen); every ACTION it performs
@@ -176,6 +247,66 @@ async function handleAdmin(path, method, request, env) {
     return json({ ok: true, id: r.meta.last_row_id });
   }
 
+  /* ---- Ja Takk Tilboð ---- */
+
+  if (path === "/admin/offers" && method === "GET") {
+    return json({ ok: true, offers: await buildOffers(env, false) });
+  }
+
+  if (path === "/admin/offer" && method === "POST") {
+    const { sub_item_id, emoji } = body;
+    const priceOld = parsePrice(body.price_old);
+    const priceNew = parsePrice(body.price_new);
+    if (!sub_item_id) return json({ ok: false, error: "sub_item_id required" }, 400);
+    if (priceOld === null || priceNew === null) {
+      return json({ ok: false, error: "price_old and price_new must be numbers" }, 400);
+    }
+    // The sub-item must exist, otherwise the offer would render as a blank card.
+    const sub = await env.DB.prepare("SELECT id FROM sub_items WHERE id = ?").bind(sub_item_id).first();
+    if (!sub) return json({ ok: false, error: "sub_item not found" }, 404);
+    // One offer per product — re-adding the same product edits the existing offer.
+    const existing = await env.DB.prepare("SELECT id FROM offers WHERE sub_item_id = ?").bind(sub_item_id).first();
+    if (existing) {
+      await env.DB.prepare(
+        "UPDATE offers SET price_old = ?, price_new = ?, emoji = ?, active = 1 WHERE id = ?")
+        .bind(priceOld, priceNew, emoji || null, existing.id).run();
+      return json({ ok: true, id: existing.id, replaced: true });
+    }
+    const next = await nextSort(env, "offers", null);
+    const r = await env.DB.prepare(
+      "INSERT INTO offers (sub_item_id, emoji, price_old, price_new, active, sort_order) VALUES (?, ?, ?, ?, 1, ?)")
+      .bind(sub_item_id, emoji || null, priceOld, priceNew, next).run();
+    return json({ ok: true, id: r.meta.last_row_id });
+  }
+
+  const patchOffer = path.match(/^\/admin\/offer\/(\d+)$/);
+  if (patchOffer && method === "PATCH") {
+    const id = Number(patchOffer[1]);
+    const sets = [], vals = [];
+    if (body.price_old !== undefined) {
+      const v = parsePrice(body.price_old);
+      if (v === null) return json({ ok: false, error: "bad price_old" }, 400);
+      sets.push("price_old = ?"); vals.push(v);
+    }
+    if (body.price_new !== undefined) {
+      const v = parsePrice(body.price_new);
+      if (v === null) return json({ ok: false, error: "bad price_new" }, 400);
+      sets.push("price_new = ?"); vals.push(v);
+    }
+    if (body.emoji !== undefined) { sets.push("emoji = ?"); vals.push(body.emoji || null); }
+    if (body.active !== undefined) { sets.push("active = ?"); vals.push(body.active ? 1 : 0); }
+    if (!sets.length) return json({ ok: false, error: "nothing to update" }, 400);
+    vals.push(id);
+    await env.DB.prepare(`UPDATE offers SET ${sets.join(", ")} WHERE id = ?`).bind(...vals).run();
+    return json({ ok: true });
+  }
+
+  const delOffer = path.match(/^\/admin\/offer\/(\d+)$/);
+  if (delOffer && method === "DELETE") {
+    await env.DB.prepare("DELETE FROM offers WHERE id = ?").bind(Number(delOffer[1])).run();
+    return json({ ok: true });
+  }
+
   const patchProd = path.match(/^\/admin\/product\/(\d+)$/);
   if (patchProd && method === "PATCH") {
     const id = Number(patchProd[1]);
@@ -213,6 +344,7 @@ async function handleAdmin(path, method, request, env) {
   if (delProd && method === "DELETE") {
     const id = Number(delProd[1]);
     await env.DB.batch([
+      env.DB.prepare("DELETE FROM offers WHERE sub_item_id IN (SELECT id FROM sub_items WHERE product_id = ?)").bind(id),
       env.DB.prepare("DELETE FROM sub_items WHERE product_id = ?").bind(id),
       env.DB.prepare("DELETE FROM products WHERE id = ?").bind(id),
     ]);
@@ -221,7 +353,11 @@ async function handleAdmin(path, method, request, env) {
 
   const delSub = path.match(/^\/admin\/sub-item\/(\d+)$/);
   if (delSub && method === "DELETE") {
-    await env.DB.prepare("DELETE FROM sub_items WHERE id = ?").bind(Number(delSub[1])).run();
+    const id = Number(delSub[1]);
+    await env.DB.batch([
+      env.DB.prepare("DELETE FROM offers WHERE sub_item_id = ?").bind(id),
+      env.DB.prepare("DELETE FROM sub_items WHERE id = ?").bind(id),
+    ]);
     return json({ ok: true });
   }
 
@@ -229,6 +365,7 @@ async function handleAdmin(path, method, request, env) {
   if (delCat && method === "DELETE") {
     const id = Number(delCat[1]);
     await env.DB.batch([
+      env.DB.prepare("DELETE FROM offers WHERE sub_item_id IN (SELECT id FROM sub_items WHERE product_id IN (SELECT id FROM products WHERE category_id = ?))").bind(id),
       env.DB.prepare("DELETE FROM sub_items WHERE product_id IN (SELECT id FROM products WHERE category_id = ?)").bind(id),
       env.DB.prepare("DELETE FROM products WHERE category_id = ?").bind(id),
       env.DB.prepare("DELETE FROM categories WHERE id = ?").bind(id),

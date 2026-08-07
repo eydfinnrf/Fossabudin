@@ -81,6 +81,53 @@
   .muted { color: var(--bark); }
   .empty { text-align: center; color: var(--bark); padding: 2rem 0; }
 
+  /* ── Ja Takk Tilboð panel ── */
+  .panel {
+    background: var(--card); border: 1px solid var(--line); border-radius: 12px;
+    box-shadow: var(--shadow); margin-bottom: 1.2rem; overflow: hidden;
+  }
+  .panel-head { display: flex; align-items: center; gap: .5rem; padding: .75rem .8rem; border-bottom: 1px solid var(--line); }
+  .panel-head h2 { margin: 0; font-size: 1rem; font-weight: 700; flex: 1; }
+  .panel-body { padding: .3rem .8rem .6rem; }
+
+  .offer { display: flex; align-items: center; gap: .5rem; padding: .55rem 0; border-bottom: 1px dashed var(--line); }
+  .offer:last-child { border-bottom: none; }
+  .offer.off { opacity: .55; }
+  .offer-emoji { font-size: 1.2rem; flex: none; width: 1.6rem; text-align: center; }
+  .offer-main { flex: 1; min-width: 0; }
+  .offer-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .offer-prices { font-size: .85rem; color: var(--bark); display: flex; align-items: center; gap: .4rem; flex-wrap: wrap; }
+  .offer-prices .old { text-decoration: line-through; }
+  .offer-prices .new { color: var(--green); font-weight: 700; }
+  .badge-pct { background: var(--green-lt); color: var(--green); }
+
+  /* price form */
+  .price-row { display: flex; gap: .5rem; margin-bottom: .7rem; }
+  .price-row label { flex: 1; font-size: .8rem; color: var(--bark); }
+  .price-row label input { margin-top: .2rem; }
+  .price-row .emoji-field { flex: none; width: 74px; }
+  .pct-preview { text-align: center; font-size: .9rem; color: var(--bark); margin: .2rem 0 .8rem; min-height: 1.3em; }
+  .pct-preview strong { color: var(--green); font-size: 1.05rem; }
+  .pct-preview.bad { color: var(--red); }
+  .offer-for { font-size: .9rem; color: var(--bark); margin: -.4rem 0 .8rem; }
+
+  /* product picker */
+  .picker { max-height: 52vh; overflow-y: auto; margin: .6rem -.4rem 0; padding: 0 .4rem; }
+  .pick-cat { border-bottom: 1px solid var(--line); }
+  .pick-cat:last-child { border-bottom: none; }
+  .pick-cat-head { display: flex; align-items: center; gap: .5rem; padding: .55rem .2rem; cursor: pointer; }
+  .pick-cat-head .cat-name { font-weight: 600; }
+  .pick-cat.open .chev { transform: rotate(90deg); }
+  .pick-subs { display: none; padding: 0 0 .4rem .5rem; }
+  .pick-cat.open .pick-subs { display: block; }
+  .pick-item {
+    display: flex; align-items: center; gap: .45rem; width: 100%; text-align: left;
+    border: none; background: transparent; padding: .45rem .3rem; border-radius: 8px;
+  }
+  .pick-item:hover { background: var(--green-lt); }
+  .pick-item .nm { flex: 1; }
+  .pick-item .has { font-size: .7rem; color: var(--green); }
+
   /* modal */
   .modal-bg { position: fixed; inset: 0; background: rgba(0,0,0,.35); display: none; align-items: center; justify-content: center; z-index: 20; padding: 1rem; }
   .modal-bg.show { display: flex; }
@@ -117,6 +164,16 @@
     <button class="btn-ghost btn-sm" id="logoutBtn">Rita út</button>
   </header>
   <div class="wrap">
+
+    <!-- JA TAKK TILBOÐ -->
+    <div class="panel" id="offersPanel">
+      <div class="panel-head">
+        <h2>Ja Takk Tilboð</h2>
+        <button class="btn-primary btn-sm" id="addOfferBtn">＋ Nýtt tilboð</button>
+      </div>
+      <div class="panel-body" id="offersList"></div>
+    </div>
+
     <div class="toolbar">
       <input type="text" class="search" id="search" placeholder="Leita eftir vøru ella bólki…" />
       <button class="btn-primary" id="addCatBtn">+ Nýggjur bólkur</button>
@@ -140,6 +197,36 @@
   </div>
 </div>
 
+<!-- PRODUCT PICKER (for Ja Takk Tilboð) -->
+<div class="modal-bg" id="pickBg">
+  <div class="modal">
+    <h3>Vel Vøru</h3>
+    <input type="text" id="pickSearch" placeholder="Leita eftir vøru…" />
+    <div class="picker" id="pickList"></div>
+    <div class="modal-actions">
+      <button class="btn-ghost" id="pickCancel">Avlýs</button>
+    </div>
+  </div>
+</div>
+
+<!-- PRICE FORM (for Ja Takk Tilboð) -->
+<div class="modal-bg" id="priceBg">
+  <div class="modal">
+    <h3 id="priceTitle">Ja Takk Tilboð</h3>
+    <p class="offer-for" id="priceFor"></p>
+    <div class="price-row">
+      <label class="emoji-field">Ikon<input type="text" id="priceEmoji" maxlength="4" placeholder="🛒" /></label>
+      <label>Upprunaligi prísur<input type="text" id="priceOld" inputmode="decimal" placeholder="15,50" /></label>
+      <label>Ja Takk Prísur<input type="text" id="priceNew" inputmode="decimal" placeholder="12,00" /></label>
+    </div>
+    <div class="pct-preview" id="pctPreview"></div>
+    <div class="modal-actions">
+      <button class="btn-ghost" id="priceCancel">Avlýs</button>
+      <button class="btn-primary" id="priceOk">Goym</button>
+    </div>
+  </div>
+</div>
+
 <div id="toast"></div>
 
 <script>
@@ -147,6 +234,7 @@ const API = location.origin;
 const TOKEN_KEY = "fb_admin_token";
 let token = sessionStorage.getItem(TOKEN_KEY) || "";
 let catalog = [];
+let offers = [];
 let openCats = new Set();   // category ids the user has expanded (kept across re-renders)
 
 /* ---------- helpers ---------- */
@@ -207,9 +295,11 @@ function logout() {
 
 /* ---------- data ---------- */
 async function load() {
-  const data = await api("/admin/catalog");
-  catalog = data.catalog || [];
+  const [cat, off] = await Promise.all([api("/admin/catalog"), api("/admin/offers")]);
+  catalog = cat.catalog || [];
+  offers = off.offers || [];
   render();
+  renderOffers();
 }
 
 /* Each category currently has one product; treat category+product[0] as a group. */
@@ -370,6 +460,265 @@ async function addCategory() {
   } catch (e) { toast("Villa: " + e.message, true); }
 }
 
+/* ================= Ja Takk Tilboð ================= */
+
+/** "12" for whole krónur, "12,50" otherwise — Faroese uses a decimal comma. */
+function fmtPrice(n) {
+  const v = Number(n);
+  if (!Number.isFinite(v)) return "—";
+  return Math.round(v * 100) % 100 === 0 ? String(Math.round(v)) : v.toFixed(2).replace(".", ",");
+}
+/** Accept both "12,50" and "12.50" from the price boxes. */
+function parsePriceInput(s) {
+  if (s == null) return null;
+  const t = String(s).replace(",", ".").trim();
+  if (t === "") return null;
+  const n = Number(t);
+  return Number.isFinite(n) && n >= 0 ? n : null;
+}
+/** The emoji an offer would show if it had no override of its own. */
+function inheritedEmoji(subItemId) {
+  for (const cat of catalog) {
+    const prod = groupProduct(cat);
+    if (prod && (prod.sub_items || []).some(s => s.id === subItemId)) return prod.emoji || cat.emoji || "";
+  }
+  return "";
+}
+
+function renderOffers() {
+  const box = document.getElementById("offersList");
+  box.innerHTML = "";
+  if (!offers.length) {
+    box.innerHTML = '<p class="muted" style="font-size:.9rem;padding:.6rem 0">Ongi tilboð enn. Trýst á “＋ Nýtt tilboð”.</p>';
+    return;
+  }
+  offers.forEach(o => box.appendChild(offerRow(o)));
+}
+
+function offerRow(o) {
+  const row = document.createElement("div");
+  row.className = "offer" + (o.active ? "" : " off");
+  const pct = o.pct == null ? "" : '<span class="badge badge-pct">−' + o.pct + '%</span>';
+  // Offers never hide themselves, so flag a sold-out item here as a warning.
+  const soldOut = o.in_stock ? "" : ' <span class="badge badge-out">Uppselt</span>';
+  row.innerHTML =
+    '<label class="sw"><input type="checkbox" ' + (o.active ? "checked" : "") + '><span></span></label>' +
+    '<span class="offer-emoji">' + esc(o.emoji || "🛒") + '</span>' +
+    '<div class="offer-main">' +
+      '<div class="offer-name">' + esc(o.name) + soldOut + '</div>' +
+      '<div class="offer-prices">' +
+        '<span class="old">' + fmtPrice(o.price_old) + ' kr</span>' +
+        '<span class="new">' + fmtPrice(o.price_new) + ' kr</span>' + pct +
+      '</div>' +
+    '</div>' +
+    '<button class="icon-btn" title="Broyt prís">✏️</button>' +
+    '<button class="icon-btn" title="Strika">🗑</button>';
+  const cb = row.querySelector("input");
+  const [editB, delB] = row.querySelectorAll(".icon-btn");
+  cb.onchange = () => toggleOffer(o, cb.checked);
+  editB.onclick = () => editOffer(o);
+  delB.onclick = () => deleteOffer(o);
+  return row;
+}
+
+/* ---------- product picker: category -> variant ---------- */
+function pickSubItem() {
+  return new Promise(resolve => {
+    const bg = document.getElementById("pickBg");
+    const search = document.getElementById("pickSearch");
+    const list = document.getElementById("pickList");
+    const openPick = new Set();
+    search.value = "";
+
+    function draw() {
+      const q = search.value.trim().toLowerCase();
+      list.innerHTML = "";
+      let shown = 0;
+      catalog.forEach(cat => {
+        const prod = groupProduct(cat);
+        const subs = prod ? (prod.sub_items || []) : [];
+        const matchCat = q === "" || cat.name.toLowerCase().includes(q);
+        const matched = subs.filter(s => q === "" || s.name.toLowerCase().includes(q));
+        const visible = (q !== "" && !matchCat) ? matched : subs;
+        if (!visible.length) return;
+        shown++;
+
+        const el = document.createElement("div");
+        el.className = "pick-cat" + (q !== "" || openPick.has(cat.id) ? " open" : "");
+        const head = document.createElement("div");
+        head.className = "pick-cat-head";
+        head.innerHTML =
+          '<span class="cat-emoji">' + esc(cat.emoji || "🛒") + '</span>' +
+          '<span class="cat-name">' + esc(cat.name) + '</span>' +
+          '<span class="cat-count">' + visible.length + '</span>' +
+          '<span class="chev">›</span>';
+        head.onclick = () => {
+          const nowOpen = el.classList.toggle("open");
+          if (nowOpen) openPick.add(cat.id); else openPick.delete(cat.id);
+        };
+        el.appendChild(head);
+
+        const wrap = document.createElement("div");
+        wrap.className = "pick-subs";
+        visible.forEach(sub => {
+          const b = document.createElement("button");
+          b.className = "pick-item";
+          const already = offers.some(o => o.sub_item_id === sub.id);
+          b.innerHTML = '<span class="nm">' + esc(sub.name) + '</span>' +
+                        (already ? '<span class="has">á tilboði</span>' : '');
+          b.onclick = () => done({ sub, cat, prod });
+          wrap.appendChild(b);
+        });
+        el.appendChild(wrap);
+        list.appendChild(el);
+      });
+      if (!shown) list.innerHTML = '<p class="empty">Einki funnið.</p>';
+    }
+
+    function key(e) { if (e.key === "Escape") done(null); }
+    const done = (val) => {
+      bg.classList.remove("show");
+      search.oninput = null;
+      document.getElementById("pickCancel").onclick = null;
+      document.removeEventListener("keydown", key);
+      resolve(val);
+    };
+    search.oninput = draw;
+    document.getElementById("pickCancel").onclick = () => done(null);
+    document.addEventListener("keydown", key);
+    bg.classList.add("show");
+    draw();
+    setTimeout(() => search.focus(), 50);
+  });
+}
+
+/* ---------- price form with a live −% preview ---------- */
+function priceForm({ title, forText, emoji = "", priceOld = "", priceNew = "" }) {
+  return new Promise(resolve => {
+    const bg = document.getElementById("priceBg");
+    document.getElementById("priceTitle").textContent = title;
+    document.getElementById("priceFor").textContent = forText;
+    const em = document.getElementById("priceEmoji");
+    const po = document.getElementById("priceOld");
+    const pn = document.getElementById("priceNew");
+    const prev = document.getElementById("pctPreview");
+    em.value = emoji || "";
+    po.value = priceOld === "" ? "" : fmtPrice(priceOld);
+    pn.value = priceNew === "" ? "" : fmtPrice(priceNew);
+
+    function upd() {
+      const o = parsePriceInput(po.value), n = parsePriceInput(pn.value);
+      if (o === null || n === null) { prev.className = "pct-preview"; prev.textContent = ""; return; }
+      if (n >= o) {
+        prev.className = "pct-preview bad";
+        prev.textContent = "Ja Takk prísurin má vera lægri enn upprunaligi prísurin.";
+        return;
+      }
+      prev.className = "pct-preview";
+      prev.innerHTML = "Avsláttur: <strong>−" + Math.round((o - n) / o * 100) + "%</strong>";
+    }
+
+    function key(e) { if (e.key === "Enter") ok(); if (e.key === "Escape") cancel(); }
+    function cleanup() {
+      document.getElementById("priceOk").onclick = null;
+      document.getElementById("priceCancel").onclick = null;
+      [em, po, pn].forEach(i => { i.removeEventListener("keydown", key); i.oninput = null; });
+    }
+    const done = (val) => { bg.classList.remove("show"); cleanup(); resolve(val); };
+    const cancel = () => done(null);
+    const ok = () => {
+      const o = parsePriceInput(po.value), n = parsePriceInput(pn.value);
+      if (o === null || n === null) {
+        prev.className = "pct-preview bad";
+        prev.textContent = "Skriva báðar prísarnar.";
+        return;
+      }
+      if (n >= o) { upd(); return; }
+      done({ price_old: o, price_new: n, emoji: em.value.trim() });
+    };
+
+    document.getElementById("priceOk").onclick = ok;
+    document.getElementById("priceCancel").onclick = cancel;
+    [em, po, pn].forEach(i => i.addEventListener("keydown", key));
+    [po, pn].forEach(i => (i.oninput = upd));
+    upd();
+    bg.classList.add("show");
+    setTimeout(() => po.focus(), 50);
+  });
+}
+
+/* ---------- offer actions ---------- */
+async function addOffer() {
+  const picked = await pickSubItem();
+  if (!picked) return;
+  const existing = offers.find(o => o.sub_item_id === picked.sub.id);
+  const inherited = (picked.prod && picked.prod.emoji) || picked.cat.emoji || "";
+  const r = await priceForm({
+    title: existing ? "Broyt tilboð" : "Nýtt Ja Takk Tilboð",
+    forText: picked.cat.name + " · " + picked.sub.name,
+    emoji: existing ? (existing.emoji_override || inherited) : inherited,
+    priceOld: existing ? existing.price_old : "",
+    priceNew: existing ? existing.price_new : "",
+  });
+  if (!r) return;
+  try {
+    await api("/admin/offer", {
+      method: "POST",
+      body: JSON.stringify({
+        sub_item_id: picked.sub.id,
+        price_old: r.price_old,
+        price_new: r.price_new,
+        // only store the emoji when it differs, so it keeps following the product
+        emoji: r.emoji === inherited ? null : r.emoji,
+      }),
+    });
+    toast(existing ? "Tilboð dagført" : "Tilboð stovnað");
+    await load();
+  } catch (e) { toast("Villa: " + e.message, true); }
+}
+
+async function editOffer(o) {
+  const inherited = inheritedEmoji(o.sub_item_id);
+  const r = await priceForm({
+    title: "Broyt tilboð",
+    forText: o.category_name ? o.category_name + " · " + o.name : o.name,
+    emoji: o.emoji_override || inherited,
+    priceOld: o.price_old,
+    priceNew: o.price_new,
+  });
+  if (!r) return;
+  try {
+    await api("/admin/offer/" + o.id, {
+      method: "PATCH",
+      body: JSON.stringify({
+        price_old: r.price_old,
+        price_new: r.price_new,
+        emoji: r.emoji === inherited ? null : r.emoji,
+      }),
+    });
+    toast("Tilboð dagført");
+    await load();
+  } catch (e) { toast("Villa: " + e.message, true); }
+}
+
+async function toggleOffer(o, active) {
+  try {
+    await api("/admin/offer/" + o.id, { method: "PATCH", body: JSON.stringify({ active: active ? 1 : 0 }) });
+    o.active = active;
+    renderOffers();
+    toast(active ? "Tilboð víst" : "Tilboð fjalt");
+  } catch (e) { toast("Villa: " + e.message, true); load(); }
+}
+
+async function deleteOffer(o) {
+  if (!confirm("Strika tilboðið á “" + o.name + "”?")) return;
+  try {
+    await api("/admin/offer/" + o.id, { method: "DELETE" });
+    toast("Tilboð strikað");
+    await load();
+  } catch (e) { toast("Villa: " + e.message, true); }
+}
+
 /* ---------- wire up ---------- */
 document.getElementById("loginBtn").onclick = async () => {
   const pw = document.getElementById("pw").value.trim();
@@ -387,6 +736,7 @@ document.getElementById("pw").addEventListener("keydown", e => { if (e.key === "
 document.getElementById("logoutBtn").onclick = logout;
 document.getElementById("refreshBtn").onclick = () => load().then(() => toast("Dagført"));
 document.getElementById("addCatBtn").onclick = addCategory;
+document.getElementById("addOfferBtn").onclick = addOffer;
 document.getElementById("search").addEventListener("input", render);
 
 /* auto-enter if a token is already in this browser session */
