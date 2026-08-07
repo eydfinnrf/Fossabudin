@@ -220,6 +220,50 @@ rather than by washing the old price out. Card heights unchanged at 108px.
 Note: `api/src/admin-page.html` already used `--bark` for `.offer-prices`, so
 the admin list never had this problem — it was frontpage-only.
 
+### 4.8 Offers marked in the ordering list too (2026-08-07, commit `4b3c236`)
+
+Owner: *"when a product gets listed on Ja Takk Tilboð the same data should be in
+the normal order list … for the customers that are ordering to see it there as
+well."* Until now an offer lived only in the `#jatakk` section at the top of the
+page; a customer already scrolling the ordering list saw nothing, which is where
+the buying decision is actually made.
+
+The join is `offer.sub_item_id` → `sub.id`, exact and already in both payloads.
+
+**Badge only — no prices in the ordering list.** That list carries no price on
+any row (`/catalog` has no price field at all), so a lone "17 kr" on one row
+would imply the other 405 items are priceless. The Ja Takk card above still
+carries the actual numbers.
+
+Two badges, both reusing the `.order-sale-badge` style that was already sitting
+unused in the CSS from an earlier design:
+
+- on the sub-item — `−15%`, or `Tilboð` when an offer has no percentage, so a
+  discount-less offer is still findable;
+- on the **collapsed group row** — `Tilboð`. Without this the badge is only ever
+  seen by someone who already opened that group, which loses most of the point.
+
+Three things had to be protected, because the badge is a child of the button
+whose text is read elsewhere:
+
+| Reader | Protection |
+|---|---|
+| Order summary, category rows, owner's SMS | `cleanItemName()` now strips `.order-sale-badge` as well as `.sub-dot`. Verified: a selected offer item still collects as `1x Heil breyð`. |
+| Product search | reads a new `data-name` attribute instead of `textContent`, so searching `tilboð` matches 0 rows and `15` matches only real names (150g, 15L, 415g). |
+| Either list reloading | `applyOfferBadges()` removes every badge before re-adding, so it is idempotent — 3 calls still give 8 badges. |
+
+`renderCatalog()` and `renderOffers()` are two independent `DOMContentLoaded`
+fetches, so **both** call `applyOfferBadges()`; whichever lands second does the
+work. Verified in both orders, and with offers arriving empty (0 badges).
+
+`loadOffers()` also gained `cache: 'no-store'`, matching `loadCatalog()`. The API
+sends `cache-control: public, max-age=60` on `/offers`, so without it an offer
+added or removed in admin could be up to a minute stale on a fresh load.
+
+**No code change is needed per offer** — admin writes to D1, `/offers` serves it,
+and both the card and the ordering-list badge follow on the next page load. A
+page already open does not update until reloaded.
+
 ---
 
 ## 5. Verification actually performed
@@ -353,6 +397,10 @@ stock toggles.
       (see §6: the local admin token and the wrangler D1 scope are both expired)
 - [x] Commit and push to `dev` — `2b5e4df`
 - [x] Eyeball the section on the deployed dev site, mobile and tablet (see §5)
+- [x] Show offers in the ordering list as well — `4b3c236` (§4.8), verified live
+      on `fossabudin-dev.eydfinn-rajani-faroe.workers.dev`
+- [ ] Decide whether an already-open page should pick up offer changes without a
+      reload (polling `/offers`), or whether next-load is enough — see §4.8
 - [ ] Owner approves merge `dev` → `main` for production
 
 ### Noticed, not acted on
