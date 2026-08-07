@@ -1146,96 +1146,82 @@
       margin: 0 auto;
     }
 
+    /* Offers wrap into as many columns as fit — one on a phone, three on a
+       desktop — so every offer is on screen instead of hidden off the side. */
     .jatakk-grid {
-      display: flex;
-      flex-direction: row;
-      gap: 1.2rem;
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: .9rem;
       margin-top: 2.5rem;
-      overflow-x: auto;
-      padding-bottom: 1rem;
-      scroll-snap-type: x mandatory;
-      -webkit-overflow-scrolling: touch;
-      scrollbar-width: thin;
-      scrollbar-color: var(--stone) transparent;
     }
 
-    .jatakk-grid::-webkit-scrollbar {
-      height: 5px;
-    }
-
-    .jatakk-grid::-webkit-scrollbar-track {
-      background: transparent;
-    }
-
-    .jatakk-grid::-webkit-scrollbar-thumb {
-      background: var(--stone);
-      border-radius: 10px;
-    }
-
+    /* A wide, shallow row: icon, then the words, then the discount.
+       (It replaced a tall 4:3 tile that only made sense with a photograph.) */
     .jatakk-card {
       background: #fff;
-      border: 1.5px solid var(--warm);
-      border-radius: 10px;
-      overflow: hidden;
+      border: 1px solid var(--warm);
+      border-radius: 12px;
       display: flex;
-      flex-direction: column;
-      flex: 0 0 260px;
-      scroll-snap-align: start;
+      align-items: center;
+      gap: 1rem;
+      padding: .95rem 1.05rem;
     }
 
-    .jatakk-img {
-      width: 100%;
-      aspect-ratio: 4/3;
-      object-fit: cover;
+    .jatakk-emoji {
+      flex: 0 0 auto;
+      width: 52px;
+      height: 52px;
+      border-radius: 50%;
       background: var(--warm);
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 2.5rem;
-      color: var(--stone);
-      min-height: 180px;
+      font-size: 1.5rem;
+      line-height: 1;
     }
 
     .jatakk-body {
-      padding: 1rem 1.1rem 1.2rem;
-      display: flex;
-      flex-direction: column;
-      gap: .4rem;
       flex: 1;
+      min-width: 0;
     }
 
     .jatakk-name {
       font-family: 'Playfair Display', serif;
-      font-size: 1rem;
+      font-size: .97rem;
       font-weight: 600;
       color: var(--ink);
+      line-height: 1.3;
     }
 
     .jatakk-pricing {
       display: flex;
-      align-items: center;
-      gap: .6rem;
-      margin-top: .5rem;
+      align-items: baseline;
+      flex-wrap: wrap;
+      gap: .5rem;
+      margin-top: .3rem;
     }
 
+    /* Sits at the far right of the row, so a long product name can never
+       run underneath it. */
     .jatakk-badge {
+      flex: 0 0 auto;
       background: var(--green);
       color: #fff;
-      font-size: .7rem;
+      font-size: .72rem;
       font-weight: 600;
       letter-spacing: .04em;
-      padding: .2rem .5rem;
+      padding: .25rem .55rem;
       border-radius: 20px;
     }
 
     .jatakk-price-new {
-      font-size: 1.05rem;
+      font-size: 1.15rem;
       font-weight: 600;
       color: var(--green);
     }
 
     .jatakk-price-old {
-      font-size: .83rem;
+      font-size: .8rem;
       color: var(--stone);
       text-decoration: line-through;
     }
@@ -1947,15 +1933,15 @@
       grid.innerHTML = '';
       offers.forEach(o => {
         const card = _el('div', 'jatakk-card');
-        card.appendChild(_el('div', 'jatakk-img', o.emoji || '🛒'));
+        card.appendChild(_el('div', 'jatakk-emoji', o.emoji || '🛒'));
         const body = _el('div', 'jatakk-body');
         body.appendChild(_el('div', 'jatakk-name', o.name));
         const pricing = _el('div', 'jatakk-pricing');
-        if (o.pct != null) pricing.appendChild(_el('span', 'jatakk-badge', '−' + o.pct + '%'));
         pricing.appendChild(_el('span', 'jatakk-price-new', fmtKr(o.price_new)));
         pricing.appendChild(_el('span', 'jatakk-price-old', fmtKr(o.price_old)));
         body.appendChild(pricing);
         card.appendChild(body);
+        if (o.pct != null) card.appendChild(_el('span', 'jatakk-badge', '−' + o.pct + '%'));
         grid.appendChild(card);
       });
       grid.hidden = false;
