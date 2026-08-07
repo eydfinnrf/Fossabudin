@@ -123,20 +123,28 @@ committed** and should stay that way:
   admin panel has been live on admin.fossabudin.fo since then. Harmless, but be
   aware it is **not** dev-only, because the Worker and D1 are shared.
 
-### Live offers in the database (as of 11:39 UTC)
+### Live offers in the database — **empty as of 12:0x UTC, and that is deliberate**
 
-```
-id=3  🍞 Heil breyð                                    20    -> 17     (-15%)
-id=4  🧀 Danbo Mild & Cremet (Arla Klovborg)           59.95 -> 44.95  (-25%)
-id=5  ☕ Kaffi (Karat)                                 30    -> 24     (-20%)
-id=6  🍟 Mikroovn Popcorn med salt (Rema 1000, 3x100g) 10    -> 8      (-20%)
+The owner deleted every demo offer before production went live, so `/offers`
+returns `count: 0`. The frontpage shows **"Onki Ja Takk Tilboð í løtuni"** and the
+ordering list shows no badges. This is the correct resting state — real offers
+get added in admin when the shop actually runs one.
+
+⚠️ **Never trust an offer list written in a doc — re-read `/offers` first.** It
+changed twice on 7 Aug *while sessions were running*, because admin writes to the
+shared D1 instantly. The 11:39 list read ids 3/4/5/6 (Heil breyð, Danbo, Kaffi,
+Mikroovn Popcorn); by 12:05 that had become ids 1/2/3 (Bónda mjólk, 12 stk. Egg,
+Heil breyð); minutes later, empty.
+
+```bash
+curl -s "https://fossabudin-api.eydfinn-rajani-faroe.workers.dev/offers" | python3 -m json.tool
 ```
 
-⚠️ **`Heil breyð` and `Danbo` are demo offers created on 7 Aug with invented
-prices.** `Kaffi` and `Mikroovn Popcorn` were added by the owner during the
-session and look real. Confirm with the owner and delete the demo two in admin
-before the site is public. (Two earlier demos, Bónda mjólk and 12 stk. Egg, the
-owner already deleted — ids 1 and 2 are gone.)
+**Why this mattered for the release:** every offer live at 12:05 was named as
+demo data with invented prices in the 7 Aug notes, and production had no offers
+section at all, so merging `dev` → `main` was the act that would first publish
+those prices as the shop's real ones. The merge was held until the owner cleared
+them. **If you are ever about to ship this section, check `/offers` first.**
 
 ---
 
