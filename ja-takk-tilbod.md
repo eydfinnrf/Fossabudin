@@ -175,11 +175,32 @@ Replaced with a **compact row**:
   instead of scrolling sideways, so no offer is hidden off the edge. One column
   on a phone, two on a tablet, three on a desktop, with no media query needed.
 - `.jatakk-img` became `.jatakk-emoji`: a 52px circle in `--warm`.
-- The `−%` badge moved **out of the price row to the far right of the card**, so
-  a long name (e.g. "Danbo Mild & Cremet (Arla Klovborg)") wraps to two lines
-  without ever running underneath it.
-- Card height dropped from ~380px to **89px** (109px when the name wraps).
-  Three offers now fit on one phone screen above the fold.
+- Card height dropped from ~380px to around **108px**. Three offers now fit on
+  one phone screen above the fold.
+
+### 4.6 Long names (2026-08-07, commit `2abfdcc`)
+
+The first pass parked the `−%` badge at the card's right edge. Measured against
+the real catalog that was the wrong trade: **median sub-item name is 24
+characters, the longest is 50** ("Fryseposer med skrivefelt (Rema 1000, 8L, 50
+stk.)"), 199 of 406 are over 24 and 85 are over 32. Names are nearly always
+`Base name (Brand, size)`, where the parenthetical carries the size — so
+truncating it loses information the customer needs. The badge was consuming
+exactly the width those names required.
+
+- **The badge moved back beside the prices**, giving the name the full row width.
+- **`-webkit-line-clamp: 3`** on `.jatakk-name`, with the untruncated name kept
+  in the `title` attribute — a freak name can't stretch the card.
+- **`grid-auto-rows: 1fr`** makes every card the same height, so a two-line name
+  no longer leaves its neighbours looking stunted.
+- Track is **`minmax(min(320px, 100%), 1fr)`** — without the `min()`, a 320px
+  phone (viewport minus 5vw padding = 288px) would overflow sideways.
+
+Checked with the three longest real names at 320px, 375px, 768px and at the
+tight 3-column desktop width (323px columns): every card 108px, **nothing
+clamped**, no sideways overflow. A deliberately absurd 152-character name
+clamps to exactly 3 lines, keeps both cards equal at 128px, and retains the
+full text in `title`.
 
 ---
 
