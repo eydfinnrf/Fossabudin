@@ -1233,10 +1233,15 @@
       color: var(--green);
     }
 
+    /* The old price is half the point of an offer, so it has to be legible.
+       It was --stone on white — about 1.9:1 contrast, effectively invisible.
+       --bark reads at roughly 6.5:1 while staying quieter than the green
+       current price, so the hierarchy still points at what you pay today. */
     .jatakk-price-old {
-      font-size: .8rem;
-      color: var(--stone);
+      font-size: .9rem;
+      color: var(--bark);
       text-decoration: line-through;
+      text-decoration-thickness: 1px;
     }
 
     /* shown while loading, and when the shop has no offers running */
