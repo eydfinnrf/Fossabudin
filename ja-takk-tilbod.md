@@ -209,6 +209,23 @@ Worth an eyeball on dev.fossabudin.fo.
 
 **Also not tested:** mobile / narrow viewport rendering of the new section.
 
+### Deployed dev site (added after the push)
+
+Verified against `fossabudin-dev.eydfinn-rajani-faroe.workers.dev` — the same
+Worker as dev.fossabudin.fo but reachable without the Access login.
+
+- **Mobile 375×812: correct.** Scrolled screenshot captured cleanly. Cards are
+  260px in a 337px horizontal scroller, `document.scrollWidth` does **not**
+  exceed the viewport, so the page has no sideways overflow.
+- **Tablet 768×1024: correct.** Scrolled screenshot captured cleanly, three
+  cards visible with the fourth peeking — the intended carousel.
+- **Section order confirmed live:** `hero → jatakk → tiding → um → samband`.
+- **No console errors.**
+- The blank-frame screenshot problem **recurred at 1280×800 only** — the same
+  nav-bar-at-the-bottom artefact. It is a capture bug in the tool, not the page:
+  the DOM at that width reports the grid at 1098px scroll width in a 1000px
+  container with all four cards laid out correctly.
+
 ---
 
 ## 6. Current state — IMPORTANT
@@ -220,14 +237,19 @@ Worth an eyeball on dev.fossabudin.fo.
   harmless — offers with no frontpage section to show them do nothing — but it
   is not dev-only.
 - **The `offers` table exists in the live database.**
+- **Committed and pushed to `dev`** as `2b5e4df`. Cloudflare Workers Builds
+  redeployed dev.fossabudin.fo automatically and the section is live there.
 
 ### Not done yet
-- **Nothing is committed or pushed.** Working tree on `dev` has:
-  `api/schema.sql`, `api/src/admin-page.html`, `api/src/catalog-api.js`,
-  `index.html` modified, `api/migrations/` untracked.
 - **4 test offers are still sitting in the live database** (Bónda mjólk, 12 stk. Egg,
   Heil breyð, Danbo Mild & Cremet). These were demo data — **delete them in admin
   before this goes anywhere near customers**, or they'll show as real offers.
+  They could not be deleted from the terminal: `api/admin-token.local.txt` no
+  longer matches the Worker's `ADMIN_TOKEN` secret (every admin call returns
+  401), and the local wrangler OAuth token has no D1 scope, so
+  `wrangler d1 execute --remote` fails with `7403`. **Delete them with the bin
+  icon on admin.fossabudin.fo** — that takes half a minute and is the workflow
+  the feature exists for.
 - **`main` / production untouched**, as agreed.
 - Production `fossabudin.fo` is still behind the Cloudflare Access login wall
   from earlier work, so customers can't see the shop at all yet regardless.
@@ -264,7 +286,16 @@ stock toggles.
 
 ## 9. Open items
 
-- [ ] Delete the 4 demo offers from the live database
-- [ ] Commit and push to `dev`
-- [ ] Eyeball the section on dev.fossabudin.fo, including on a phone
+- [ ] **Delete the 4 demo offers** — owner has to do this in admin.fossabudin.fo
+      (see §6: the local admin token and the wrangler D1 scope are both expired)
+- [x] Commit and push to `dev` — `2b5e4df`
+- [x] Eyeball the section on the deployed dev site, mobile and tablet (see §5)
 - [ ] Owner approves merge `dev` → `main` for production
+
+### Noticed, not acted on
+
+- `api/admin-token.local.txt` is stale. Worth refreshing it (or dropping it) so
+  the next session isn't misled into thinking it has admin access.
+- The card's emoji tile is ~195px tall with a 2.5rem emoji in the middle of it —
+  a lot of empty space, inherited from the old design that expected photographs.
+  It reads fine, but a smaller tile or a real product photo would look tighter.
