@@ -157,6 +157,30 @@ hardcoded 7-item `TILBOD` array, and `renderTilbod()`.
 `.jatakk-desc` was dropped since there's no description line, and `.jatakk-status`
 was added for the loading/empty text.
 
+### 4.5 Card redesign (2026-08-07, commit `b075e51`)
+
+The first version reused the old `.tilbod-card` shape: a 4:3 image slot above
+the text. That shape was drawn for **product photographs** — filled with one
+emoji it left roughly **195px of empty box** on every card, and the horizontal
+scroller meant a phone showed **one** offer at a time.
+
+Replaced with a **compact row**:
+
+```
+[ 52px emoji disc ]  Name              −15%
+                     17 kr  20 kr
+```
+
+- `.jatakk-grid` is now `repeat(auto-fill, minmax(280px, 1fr))` — it **wraps**
+  instead of scrolling sideways, so no offer is hidden off the edge. One column
+  on a phone, two on a tablet, three on a desktop, with no media query needed.
+- `.jatakk-img` became `.jatakk-emoji`: a 52px circle in `--warm`.
+- The `−%` badge moved **out of the price row to the far right of the card**, so
+  a long name (e.g. "Danbo Mild & Cremet (Arla Klovborg)") wraps to two lines
+  without ever running underneath it.
+- Card height dropped from ~380px to **89px** (109px when the name wraps).
+  Three offers now fit on one phone screen above the fold.
+
 ---
 
 ## 5. Verification actually performed
@@ -296,6 +320,4 @@ stock toggles.
 
 - `api/admin-token.local.txt` is stale. Worth refreshing it (or dropping it) so
   the next session isn't misled into thinking it has admin access.
-- The card's emoji tile is ~195px tall with a 2.5rem emoji in the middle of it —
-  a lot of empty space, inherited from the old design that expected photographs.
-  It reads fine, but a smaller tile or a real product photo would look tighter.
+- ~~The card's emoji tile is too tall~~ — **fixed in §4.5.**
