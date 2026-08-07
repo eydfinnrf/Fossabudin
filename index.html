@@ -1928,6 +1928,11 @@
        The cards are display only — they advertise, they don't order. */
     const OFFERS_CACHE_KEY = 'fossabudin_offers_v1';
 
+    /* sub_item_id -> offer, so the ordering list below can mark the same items.
+       The catalog and the offers are two independent fetches, so whichever
+       lands second calls applyOfferBadges() — see renderCatalog/renderOffers. */
+    const OFFERS_BY_SUB = new Map();
+
     /** "12 kr" for whole krónur, "12,50 kr" otherwise — Faroese decimal comma. */
     function fmtKr(n) {
       const v = Number(n);
@@ -1936,6 +1941,10 @@
     }
 
     function renderOffers(offers) {
+      OFFERS_BY_SUB.clear();
+      offers.forEach(o => { if (o.sub_item_id != null) OFFERS_BY_SUB.set(Number(o.sub_item_id), o); });
+      applyOfferBadges();   // no-op if the catalog has not rendered yet
+
       const grid = document.getElementById('jatakk-grid');
       const status = document.getElementById('jatakk-status');
       if (!grid || !status) return;
@@ -1970,7 +1979,9 @@
 
     async function loadOffers() {
       try {
-        const res = await fetch(CATALOG_API + '/offers');
+        // no-store like /catalog: the API sends max-age=60, and an offer added or
+        // removed on admin.fossabudin.fo should show up on the next load, not a minute later.
+        const res = await fetch(CATALOG_API + '/offers', { cache: 'no-store' });
         const data = await res.json();
         if (!data.ok) throw new Error(data.error || 'offers failed');
         const offers = data.offers || [];
@@ -1982,6 +1993,35 @@
         try { cached = JSON.parse(localStorage.getItem(OFFERS_CACHE_KEY) || 'null'); } catch (e2) {}
         renderOffers(Array.isArray(cached) ? cached : []);
       }
+    }
+
+    /** Mark the ordering list with the offers shown in the Ja Takk section, so a
+        customer picking items sees the same thing there. Rebuilt from scratch on
+        every call, so it stays right when either list reloads. Never touches the
+        item name — cleanItemName() strips these badges back off for the order. */
+    function applyOfferBadges() {
+      document.querySelectorAll('.expandable-wrap').forEach(wrap => {
+        let wrapHasOffer = false;
+
+        wrap.querySelectorAll('.sub-item[data-sub-id]').forEach(sb => {
+          sb.querySelector('.order-sale-badge')?.remove();
+          const offer = OFFERS_BY_SUB.get(Number(sb.dataset.subId));
+          if (!offer) return;
+          wrapHasOffer = true;
+          // An offer without a percentage still deserves to be findable.
+          sb.appendChild(_el('span', 'order-sale-badge',
+                             offer.pct != null ? '−' + offer.pct + '%' : 'Tilboð'));
+        });
+
+        // The group is collapsed by default, so flag it on the closed row too.
+        const head = wrap.querySelector('.product-item');
+        if (!head) return;
+        head.querySelector('.order-sale-badge')?.remove();
+        if (wrapHasOffer) {
+          head.insertBefore(_el('span', 'order-sale-badge', 'Tilboð'),
+                            head.querySelector('.expand-arrow'));
+        }
+      });
     }
 
     function toggleProduct(el) { el.classList.toggle('chosen'); }
@@ -2025,6 +2065,8 @@
         const row = _el('div', 'sub-item-row');
         const sb = _el('button', 'sub-item');
         sb.setAttribute('onclick', 'toggleSubItem(this)');
+        sb.dataset.subId = sub.id;
+        sb.dataset.name = sub.name;   // searched against, so a badge can't pollute it
         sb.appendChild(_el('span', 'sub-dot'));
         sb.appendChild(document.createTextNode(sub.name));
         row.append(sb, _qtyControl());
@@ -2058,6 +2100,7 @@
         c.appendChild(grid);
         host.appendChild(c);
       });
+      applyOfferBadges();   // no-op if the offers have not landed yet
     }
 
     async function loadCatalog() {
@@ -2162,7 +2205,8 @@
           let wrapHasMatch = false;
 
           wrap.querySelectorAll('.sub-item-row').forEach(row => {
-            const name = row.querySelector('.sub-item')?.textContent.toLowerCase() || '';
+            const sb = row.querySelector('.sub-item');
+            const name = (sb?.dataset.name || sb?.textContent || '').toLowerCase();
             const match = q === '' || catNameMatch || prodNameMatch || name.includes(q);
             row.style.display = match ? '' : 'none';
             if (match) wrapHasMatch = true;
@@ -2190,11 +2234,11 @@
       input.focus();
     }
 
-    /* Read a chosen item's clean name — keeps sizes like (1,5L),
-       strips only the leading dot span. */
+    /* Read a chosen item's clean name — keeps sizes like (1,5L), strips the
+       leading dot span and any offer badge, so neither reaches the order SMS. */
     function cleanItemName(btn) {
       const c = btn.cloneNode(true);
-      c.querySelectorAll('.sub-dot').forEach(e => e.remove());
+      c.querySelectorAll('.sub-dot, .order-sale-badge').forEach(e => e.remove());
       return c.textContent.trim();
     }
 
