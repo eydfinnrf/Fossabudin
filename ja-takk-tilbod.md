@@ -202,6 +202,24 @@ clamped**, no sideways overflow. A deliberately absurd 152-character name
 clamps to exactly 3 lines, keeps both cards equal at 128px, and retains the
 full text in `title`.
 
+Confirmed afterwards on the deployed dev site against an offer the owner had
+just added — "Mikroovn Popcorn med salt (Rema 1000, 3x100g)", 45 characters —
+which wraps to two lines, keeps the `3x100g` size visible, and matches its
+neighbours at 108px.
+
+### 4.7 Previous price legibility (2026-08-07, commit `686e543`)
+
+`.jatakk-price-old` was `--stone` (`#c8bfae`) on a white card — about **1.9:1**
+contrast, far below the 4.5:1 readability threshold, so the struck-through
+price effectively vanished. Owner asked for it to be more visible.
+
+Now `--bark` at **6.48:1**, and `.8rem → .9rem`. The green current price keeps
+the emphasis through **size and weight** (18.4px semibold vs 14.4px regular)
+rather than by washing the old price out. Card heights unchanged at 108px.
+
+Note: `api/src/admin-page.html` already used `--bark` for `.offer-prices`, so
+the admin list never had this problem — it was frontpage-only.
+
 ---
 
 ## 5. Verification actually performed
