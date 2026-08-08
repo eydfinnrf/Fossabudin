@@ -263,11 +263,15 @@ let openCats = new Set();   // category ids the user has expanded (kept across r
 
 /* ---------- helpers ---------- */
 
-/* Dagfør re-reads the catalog from the database into this page. It is green
-   while the page matches what was last read, and neutral once a write has
-   happened, as a nudge to re-read. This is about THIS PAGE being current —
-   every change is saved to the database the moment it is made, and the shop
-   site reads that database on every visit, so nothing is ever waiting to be
+/* Dagfør re-reads the catalog from the database into this page. Green means
+   "I have looked at the full list since the last change"; neutral means a
+   change was made that has not been re-viewed. Cleared ONLY by an explicit
+   Dagfør click (or the initial load after logging in) — several actions below
+   also call load() on their own, to refresh THEIR local state after a write,
+   but that must not by itself count as the owner reviewing the list, so it
+   does not touch this flag. This is about THIS PAGE being current — every
+   change is saved to the database the moment it is made, and the shop site
+   reads that database on every visit, so nothing is ever waiting to be
    published. */
 let viewStale = false;
 function setViewStale(stale) {
@@ -345,7 +349,6 @@ async function load() {
   offers = off.offers || [];
   render();
   renderOffers();
-  setViewStale(false);   // this page now matches the database again
 }
 
 /* Each category currently has one product; treat category+product[0] as a group. */
@@ -805,13 +808,14 @@ document.getElementById("loginBtn").onclick = async () => {
     document.getElementById("login").style.display = "none";
     document.getElementById("app").style.display = "block";
     await load();
+    setViewStale(false);   // just-logged-in view is current by definition
   } catch (e) {
     document.getElementById("loginErr").style.display = "block";
   }
 };
 document.getElementById("pw").addEventListener("keydown", e => { if (e.key === "Enter") document.getElementById("loginBtn").click(); });
 document.getElementById("logoutBtn").onclick = logout;
-document.getElementById("refreshBtn").onclick = () => load().then(() => toast("Dagført"));
+document.getElementById("refreshBtn").onclick = () => load().then(() => { setViewStale(false); toast("Dagført"); });
 document.getElementById("addCatBtn").onclick = addCategory;
 document.getElementById("addOfferBtn").onclick = addOffer;
 document.getElementById("search").addEventListener("input", render);
@@ -824,6 +828,7 @@ document.getElementById("search").addEventListener("input", render);
     document.getElementById("login").style.display = "none";
     document.getElementById("app").style.display = "block";
     await load();
+    setViewStale(false);   // just-opened view is current by definition
   } catch (e) { logout(); }
 })();
 </script>
