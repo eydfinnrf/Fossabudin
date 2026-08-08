@@ -111,7 +111,7 @@ async function handleVerifyOrder(request, env, cors) {
   await sendSms(env, env.SHOP_OWNER_PHONE, `Ný bílegging frá: ${p}\n\n${orderDetails}`);
   // Order confirmation to the customer (best-effort — don't fail the order on this).
   try {
-    await sendSms(env, p, `Takk fyri bíleggingina!\n\nTín bílegging:\n${orderDetails}`);
+    await sendSms(env, p, `Takk fyri bíleggingina!\n\nTín bílegging:\n${orderDetails}\n\nSms boðini kunnu ikki svarast`);
   } catch (e) {
     console.warn('Customer confirmation SMS failed:', e);
   }
