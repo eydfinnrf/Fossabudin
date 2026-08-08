@@ -31,6 +31,22 @@
   .btn-primary { background: var(--green); color: #fff; border-color: var(--green); }
   .btn-ghost { background: transparent; }
   .btn-sm { padding: .3rem .55rem; font-size: .85rem; }
+  /* Deliberately the largest control in the header — it is the one the owner
+     looks for after a round of edits. */
+  .btn-refresh {
+    padding: .6rem 1.05rem; font-size: 1rem; font-weight: 700;
+    border: 2px solid var(--green); color: var(--green); background: var(--green-lt);
+    flex-shrink: 0;
+  }
+  .btn-refresh:hover { background: var(--green); color: #fff; }
+  /* Neutral once something has been written, green again after a re-read. */
+  .btn-refresh.stale {
+    border-color: var(--bark); color: var(--ink); background: var(--card);
+  }
+  .btn-refresh.stale:hover { background: var(--ink); border-color: var(--ink); color: #fff; }
+  /* The bigger button leaves the title too little room on a phone; the subtitle
+     is decorative, so drop it rather than let the heading wrap to two lines. */
+  @media (max-width: 420px) { header .sub { display: none; } }
   .icon-btn { border: none; background: transparent; padding: .3rem .45rem; font-size: 1rem; }
   input[type=text], input[type=password] {
     font: inherit; width: 100%; padding: .65rem .7rem; border: 1px solid var(--line);
@@ -56,6 +72,14 @@
   .cat-emoji { font-size: 1.25rem; }
   .cat-name { font-weight: 600; flex: 1; }
   .cat-count { color: var(--bark); font-size: .8rem; }
+  .cat-move { display: flex; gap: .15rem; }
+  .btn-move {
+    border: 1px solid var(--line); background: #fff; color: var(--bark);
+    border-radius: 6px; width: 26px; height: 26px; line-height: 1;
+    font-size: .85rem; cursor: pointer; padding: 0;
+  }
+  .btn-move:hover:not(:disabled) { border-color: var(--bark); color: var(--ink); }
+  .btn-move:disabled { opacity: .3; cursor: default; }
   .cat.hidden-group .cat-name { color: var(--bark); text-decoration: line-through; }
   .chev { transition: transform .2s; color: var(--bark); }
   .cat.open .chev { transform: rotate(90deg); }
@@ -160,7 +184,7 @@
     <div style="flex:1">
       <h1>Fossábúðin <span class="sub">· vørustýring</span></h1>
     </div>
-    <button class="btn-ghost btn-sm" id="refreshBtn">↻ Dagfør</button>
+    <button class="btn-refresh" id="refreshBtn">↻ Dagfør</button>
     <button class="btn-ghost btn-sm" id="logoutBtn">Rita út</button>
   </header>
   <div class="wrap">
@@ -238,6 +262,24 @@ let offers = [];
 let openCats = new Set();   // category ids the user has expanded (kept across re-renders)
 
 /* ---------- helpers ---------- */
+
+/* Dagfør re-reads the catalog from the database into this page. It is green
+   while the page matches what was last read, and neutral once a write has
+   happened, as a nudge to re-read. This is about THIS PAGE being current —
+   every change is saved to the database the moment it is made, and the shop
+   site reads that database on every visit, so nothing is ever waiting to be
+   published. */
+let viewStale = false;
+function setViewStale(stale) {
+  viewStale = stale;
+  const b = document.getElementById("refreshBtn");
+  if (!b) return;
+  b.classList.toggle("stale", stale);
+  b.title = stale
+    ? "Broytingar eru goymdar. Trýst fyri at endurlesa listan."
+    : "Listin er tann sami sum í dátugrunninum.";
+}
+
 function toast(msg, isErr) {
   const t = document.getElementById("toast");
   t.textContent = msg; t.className = "show" + (isErr ? " err" : "");
@@ -251,6 +293,9 @@ async function api(path, opts = {}) {
   if (res.status === 401) { logout(); throw new Error("unauthorized"); }
   const data = await res.json().catch(() => ({ ok: false }));
   if (!data.ok) throw new Error(data.error || "villa");
+  // Any successful write means this page's copy of the catalog may now differ
+  // from the database. Done here so every present and future write counts.
+  if ((opts.method || "GET") !== "GET") setViewStale(true);
   return data;
 }
 function esc(s) { const d = document.createElement("div"); d.textContent = s == null ? "" : s; return d.innerHTML; }
@@ -300,6 +345,7 @@ async function load() {
   offers = off.offers || [];
   render();
   renderOffers();
+  setViewStale(false);   // this page now matches the database again
 }
 
 /* Each category currently has one product; treat category+product[0] as a group. */
@@ -312,7 +358,7 @@ function render() {
   list.innerHTML = "";
   let shown = 0;
 
-  catalog.forEach(cat => {
+  catalog.forEach((cat, idx) => {
     const prod = groupProduct(cat);
     const items = prod ? (prod.sub_items || []) : [];
     const matchCat = q === "" || cat.name.toLowerCase().includes(q);
@@ -333,11 +379,22 @@ function render() {
       '<span class="cat-emoji">' + esc(cat.emoji || "🛒") + '</span>' +
       '<span class="cat-name">' + esc(cat.name) + '</span>' +
       '<span class="cat-count">' + items.length + ' vørur</span>' +
+      // Hidden while searching: the list is filtered then, so "up" would move the
+      // category past rows the user cannot see.
+      (q === ""
+        ? '<span class="cat-move">' +
+            '<button class="btn-move" title="Flyt upp"' + (idx === 0 ? " disabled" : "") + '>↑</button>' +
+            '<button class="btn-move" title="Flyt niður"' + (idx === catalog.length - 1 ? " disabled" : "") + '>↓</button>' +
+          '</span>'
+        : "") +
       '<span class="chev">›</span>';
     head.onclick = () => {
       const nowOpen = el.classList.toggle("open");
       if (nowOpen) openCats.add(cat.id); else openCats.delete(cat.id);
     };
+    head.querySelectorAll(".btn-move").forEach((btn, i) => {
+      btn.onclick = (e) => { e.stopPropagation(); moveCategory(idx, i === 0 ? -1 : 1); };
+    });
     el.appendChild(head);
 
     const body = document.createElement("div");
@@ -458,6 +515,26 @@ async function addCategory() {
     await api("/admin/product", { method: "POST", body: JSON.stringify({ category_id: c.id, name: r.name, emoji: r.emoji, type: "expandable" }) });
     toast("Bólkur stovnaður"); await load();
   } catch (e) { toast("Villa: " + e.message, true); }
+}
+
+/* Move a category one step. New categories are always appended last, so this is
+   the only way to get one where it belongs. Reorders locally and re-renders
+   first so the list does not jump, then sends the whole order; on failure it
+   reloads from the server rather than leaving the screen lying. */
+async function moveCategory(idx, dir) {
+  const to = idx + dir;
+  if (to < 0 || to >= catalog.length) return;
+  [catalog[idx], catalog[to]] = [catalog[to], catalog[idx]];
+  render();
+  try {
+    await api("/admin/categories/reorder", {
+      method: "POST",
+      body: JSON.stringify({ ids: catalog.map(c => c.id) }),
+    });
+  } catch (e) {
+    toast("Villa: " + e.message, true);
+    await load();
+  }
 }
 
 /* ================= Ja Takk Tilboð ================= */

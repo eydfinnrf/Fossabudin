@@ -227,6 +227,31 @@ async function handleAdmin(path, method, request, env) {
     return json({ ok: true, id: r.meta.last_row_id });
   }
 
+  /* Reorder categories. Takes the full ordered id list and rewrites sort_order
+     to 1..N, so it also normalises the duplicate/zero values that "append at
+     MAX+1" leaves behind. Whole-list rather than a swap: a swap between two rows
+     that share a sort_order silently does nothing. */
+  if (path === "/admin/categories/reorder" && method === "POST") {
+    const ids = Array.isArray(body.ids) ? body.ids.map(Number) : null;
+    if (!ids || !ids.length || ids.some((n) => !Number.isInteger(n) || n <= 0)) {
+      return json({ ok: false, error: "ids must be a non-empty array of category ids" }, 400);
+    }
+    if (new Set(ids).size !== ids.length) {
+      return json({ ok: false, error: "ids contains duplicates" }, 400);
+    }
+    // Demand every category exactly once, so a stale admin page cannot drop one
+    // out of the ordering and leave sort_order half written.
+    const existing = await env.DB.prepare("SELECT id FROM categories").all();
+    const have = existing.results.map((r) => r.id).sort((a, b) => a - b);
+    const want = [...ids].sort((a, b) => a - b);
+    if (have.length !== want.length || have.some((v, i) => v !== want[i])) {
+      return json({ ok: false, error: "ids must list every category exactly once" }, 400);
+    }
+    await env.DB.batch(ids.map((id, i) =>
+      env.DB.prepare("UPDATE categories SET sort_order = ? WHERE id = ?").bind(i + 1, id)));
+    return json({ ok: true, count: ids.length });
+  }
+
   if (path === "/admin/product" && method === "POST") {
     const { category_id, name, emoji, type } = body;
     if (!category_id || !name) return json({ ok: false, error: "category_id and name required" }, 400);
