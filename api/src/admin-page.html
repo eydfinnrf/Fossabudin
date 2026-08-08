@@ -303,6 +303,11 @@ async function api(path, opts = {}) {
   return data;
 }
 function esc(s) { const d = document.createElement("div"); d.textContent = s == null ? "" : s; return d.innerHTML; }
+/* Delays fn until typing pauses, so a full list rebuild doesn't run on every keystroke. */
+function debounce(fn, ms) {
+  let t = null;
+  return (...args) => { clearTimeout(t); t = setTimeout(() => fn(...args), ms); };
+}
 
 /* ---------- modal (text + optional emoji) ---------- */
 function askText({ title, value = "", emoji = null, placeholder = "Navn" }) {
@@ -665,7 +670,7 @@ function pickSubItem() {
       document.removeEventListener("keydown", key);
       resolve(val);
     };
-    search.oninput = draw;
+    search.oninput = debounce(draw, 90);
     document.getElementById("pickCancel").onclick = () => done(null);
     document.addEventListener("keydown", key);
     bg.classList.add("show");
@@ -828,7 +833,7 @@ document.getElementById("logoutBtn").onclick = logout;
 document.getElementById("refreshBtn").onclick = () => load().then(() => { setViewStale(false); toast("Dagført"); });
 document.getElementById("addCatBtn").onclick = addCategory;
 document.getElementById("addOfferBtn").onclick = addOffer;
-document.getElementById("search").addEventListener("input", render);
+document.getElementById("search").addEventListener("input", debounce(render, 90));
 
 /* auto-enter if a token is already in this browser session */
 (async () => {

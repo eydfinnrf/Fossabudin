@@ -7,7 +7,6 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet" />
-  <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
   <script src="https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit" async defer></script>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -43,8 +42,10 @@
       align-items: center;
       justify-content: flex-end;
       padding: 1.1rem 5vw;
-      background: rgba(247,244,238,0.88);
-      backdrop-filter: blur(10px);
+      /* Solid, not blurred: this bar is pinned for the whole scroll, and a
+         backdrop-filter forces the browser to recompute it every frame. At
+         this opacity the blur was barely visible anyway. */
+      background: rgba(247,244,238,0.97);
       border-bottom: 1px solid var(--warm);
     }
 
@@ -385,8 +386,9 @@
       position: sticky;
       top: 0;
       z-index: 100;
+      /* Same trade as `nav` above: sticky + backdrop-filter recomputes every
+         scroll frame; this background is already 97% opaque without it. */
       background: rgba(247,244,238,.97);
-      backdrop-filter: blur(10px);
       border-bottom: 1px solid var(--warm);
       display: flex;
       align-items: center;
@@ -1794,7 +1796,7 @@
 
           <div class="prod-search-wrap">
             <span class="prod-search-icon">🔍</span>
-            <input type="text" id="prodSearch" class="prod-search" placeholder="Leita eftir vøru…" oninput="filterProducts()" autocomplete="off" />
+            <input type="text" id="prodSearch" class="prod-search" placeholder="Leita eftir vøru…" oninput="filterProductsDebounced()" autocomplete="off" />
             <button type="button" class="prod-search-clear" id="prodSearchClear" onclick="clearProductSearch()" aria-label="Rudda leiting">×</button>
           </div>
           <p class="prod-noresults" id="prodNoResults">Ongar vørur funnar.</p>
@@ -2184,7 +2186,15 @@
       updateBasketCount();
     }
 
-    /* ── Product search / filter ── */
+    /* ── Product search / filter ──
+       Runs on every keystroke, so it's debounced: typing fast no longer
+       triggers a full re-scan of every category/product/sub-item row per
+       character. */
+    let _filterProductsTimer = null;
+    function filterProductsDebounced() {
+      clearTimeout(_filterProductsTimer);
+      _filterProductsTimer = setTimeout(filterProducts, 90);
+    }
     function filterProducts() {
       const input = document.getElementById('prodSearch');
       const q = input.value.trim().toLowerCase();
@@ -2341,13 +2351,6 @@
     function closeBasketView() {
       document.getElementById('basketView').classList.remove('active');
     }
-
-    // ── EmailJS credentials — fill these in after setting up emailjs.com ──
-    const EMAILJS_PUBLIC_KEY  = 'yqyYhJoiwRUNP-b2h';
-    const EMAILJS_SERVICE_ID  = 'service_rtbz0gg';
-    const EMAILJS_TEMPLATE_ID = 'template_mrdet61';
-
-    emailjs.init({ publicKey: EMAILJS_PUBLIC_KEY });
 
     // ── Order verification (phone one-time code) ──
     const SMS_WORKER = 'https://fossabudin-sms.eydfinn-rajani-faroe.workers.dev';
