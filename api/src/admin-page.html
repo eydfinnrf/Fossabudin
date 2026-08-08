@@ -240,7 +240,7 @@
     <p class="offer-for" id="priceFor"></p>
     <div class="price-row">
       <label class="emoji-field">Ikon<input type="text" id="priceEmoji" maxlength="4" placeholder="🛒" /></label>
-      <label>Upprunaligi prísur<input type="text" id="priceOld" inputmode="decimal" placeholder="15,50" /></label>
+      <label>Upprunaligi prísur (valfrítt)<input type="text" id="priceOld" inputmode="decimal" placeholder="15,50" /></label>
       <label>Ja Takk Prísur<input type="text" id="priceNew" inputmode="decimal" placeholder="12,00" /></label>
     </div>
     <div class="pct-preview" id="pctPreview"></div>
@@ -579,6 +579,8 @@ function offerRow(o) {
   const row = document.createElement("div");
   row.className = "offer" + (o.active ? "" : " off");
   const pct = o.pct == null ? "" : '<span class="badge badge-pct">−' + o.pct + '%</span>';
+  // Upprunaligi prísur is optional — no old price means no strikethrough/pct.
+  const old = o.price_old == null ? "" : '<span class="old">' + fmtPrice(o.price_old) + ' kr</span>';
   // Offers never hide themselves, so flag a sold-out item here as a warning.
   const soldOut = o.in_stock ? "" : ' <span class="badge badge-out">Uppselt</span>';
   row.innerHTML =
@@ -587,7 +589,7 @@ function offerRow(o) {
     '<div class="offer-main">' +
       '<div class="offer-name">' + esc(o.name) + soldOut + '</div>' +
       '<div class="offer-prices">' +
-        '<span class="old">' + fmtPrice(o.price_old) + ' kr</span>' +
+        old +
         '<span class="new">' + fmtPrice(o.price_new) + ' kr</span>' + pct +
       '</div>' +
     '</div>' +
@@ -683,12 +685,13 @@ function priceForm({ title, forText, emoji = "", priceOld = "", priceNew = "" })
     const pn = document.getElementById("priceNew");
     const prev = document.getElementById("pctPreview");
     em.value = emoji || "";
-    po.value = priceOld === "" ? "" : fmtPrice(priceOld);
+    po.value = priceOld === "" || priceOld == null ? "" : fmtPrice(priceOld);
     pn.value = priceNew === "" ? "" : fmtPrice(priceNew);
 
     function upd() {
       const o = parsePriceInput(po.value), n = parsePriceInput(pn.value);
-      if (o === null || n === null) { prev.className = "pct-preview"; prev.textContent = ""; return; }
+      if (po.value.trim() === "" || n === null) { prev.className = "pct-preview"; prev.textContent = ""; return; }
+      if (o === null) { prev.className = "pct-preview"; prev.textContent = ""; return; }
       if (n >= o) {
         prev.className = "pct-preview bad";
         prev.textContent = "Ja Takk prísurin má vera lægri enn upprunaligi prísurin.";
@@ -707,13 +710,20 @@ function priceForm({ title, forText, emoji = "", priceOld = "", priceNew = "" })
     const done = (val) => { bg.classList.remove("show"); cleanup(); resolve(val); };
     const cancel = () => done(null);
     const ok = () => {
-      const o = parsePriceInput(po.value), n = parsePriceInput(pn.value);
-      if (o === null || n === null) {
+      const oldEmpty = po.value.trim() === "";
+      const o = oldEmpty ? null : parsePriceInput(po.value);
+      const n = parsePriceInput(pn.value);
+      if (n === null) {
         prev.className = "pct-preview bad";
-        prev.textContent = "Skriva báðar prísarnar.";
+        prev.textContent = "Skriva Ja Takk prísin.";
         return;
       }
-      if (n >= o) { upd(); return; }
+      if (!oldEmpty && o === null) {
+        prev.className = "pct-preview bad";
+        prev.textContent = "Ógildigur upprunaligur prísur.";
+        return;
+      }
+      if (o !== null && n >= o) { upd(); return; }
       done({ price_old: o, price_new: n, emoji: em.value.trim() });
     };
 

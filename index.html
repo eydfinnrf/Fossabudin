@@ -1968,7 +1968,7 @@
         const pricing = _el('div', 'jatakk-pricing');
         if (o.pct != null) pricing.appendChild(_el('span', 'jatakk-badge', '−' + o.pct + '%'));
         pricing.appendChild(_el('span', 'jatakk-price-new', fmtKr(o.price_new)));
-        pricing.appendChild(_el('span', 'jatakk-price-old', fmtKr(o.price_old)));
+        if (o.price_old != null) pricing.appendChild(_el('span', 'jatakk-price-old', fmtKr(o.price_old)));
         body.appendChild(pricing);
         card.appendChild(body);
         grid.appendChild(card);

@@ -39,7 +39,7 @@ CREATE TABLE offers (
   id          INTEGER PRIMARY KEY,
   sub_item_id INTEGER NOT NULL REFERENCES sub_items(id) ON DELETE CASCADE,
   emoji       TEXT,                                  -- NULL = inherit from product
-  price_old   REAL    NOT NULL,
+  price_old   REAL,                                  -- NULL = no original price / no discount shown
   price_new   REAL    NOT NULL,
   active      INTEGER NOT NULL DEFAULT 1,            -- 1 = shown on the site
   sort_order  INTEGER NOT NULL DEFAULT 0

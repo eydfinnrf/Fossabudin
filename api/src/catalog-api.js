@@ -16,8 +16,8 @@
  *   DELETE /admin/product/:id
  *   DELETE /admin/sub-item/:id
  *   GET  /admin/offers       -> all offers incl. switched-off ones
- *   POST /admin/offer        -> { sub_item_id, price_old, price_new, emoji? }
- *   PATCH /admin/offer/:id   -> { price_old?, price_new?, emoji?, active? }
+ *   POST /admin/offer        -> { sub_item_id, price_new, price_old?, emoji? }
+ *   PATCH /admin/offer/:id   -> { price_new?, price_old?(null clears), emoji?, active? }
  *   DELETE /admin/offer/:id
  *
  * All customer-facing names are Faroese — pass them through unchanged.
@@ -280,11 +280,11 @@ async function handleAdmin(path, method, request, env) {
 
   if (path === "/admin/offer" && method === "POST") {
     const { sub_item_id, emoji } = body;
-    const priceOld = parsePrice(body.price_old);
+    const priceOld = parsePrice(body.price_old); // optional — null means no original price shown
     const priceNew = parsePrice(body.price_new);
     if (!sub_item_id) return json({ ok: false, error: "sub_item_id required" }, 400);
-    if (priceOld === null || priceNew === null) {
-      return json({ ok: false, error: "price_old and price_new must be numbers" }, 400);
+    if (priceNew === null) {
+      return json({ ok: false, error: "price_new must be a number" }, 400);
     }
     // The sub-item must exist, otherwise the offer would render as a blank card.
     const sub = await env.DB.prepare("SELECT id FROM sub_items WHERE id = ?").bind(sub_item_id).first();
@@ -309,8 +309,12 @@ async function handleAdmin(path, method, request, env) {
     const id = Number(patchOffer[1]);
     const sets = [], vals = [];
     if (body.price_old !== undefined) {
-      const v = parsePrice(body.price_old);
-      if (v === null) return json({ ok: false, error: "bad price_old" }, 400);
+      // Explicit null/"" clears the original price (it's optional); anything
+      // else must parse as a number.
+      const v = body.price_old === null || body.price_old === "" ? null : parsePrice(body.price_old);
+      if (v === null && body.price_old !== null && body.price_old !== "") {
+        return json({ ok: false, error: "bad price_old" }, 400);
+      }
       sets.push("price_old = ?"); vals.push(v);
     }
     if (body.price_new !== undefined) {
