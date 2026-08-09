@@ -288,6 +288,7 @@
       background: var(--green);
       flex-shrink: 0;
     }
+    .dot.closed { background: var(--stone); }
 
     /* ── SECTION COMMONS ───────────────────────── */
     section { padding: 6rem 5vw; }
@@ -1592,8 +1593,8 @@
       <a href="tel:+298282586" class="btn btn-outline">Kontakta okkum</a>
     </div>
     <div class="hero-hours">
-      <span class="dot"></span>
-      Í dag opið &nbsp;·&nbsp; 09:00 – 19:00
+      <span class="dot" id="heroHoursDot"></span>
+      <span id="heroHoursText">Í dag opið &nbsp;·&nbsp; 09:00 – 19:00</span>
     </div>
   </section>
 
@@ -2131,6 +2132,39 @@
 
     document.addEventListener('DOMContentLoaded', loadCatalog);
     document.addEventListener('DOMContentLoaded', loadOffers);
+
+    // Keeps the hero "open now" pill in sync with the Upplatingartíðir table:
+    // Mán–Leygardagur 09:00–19:00, Sunnudagur stongt.
+    function updateOpenStatus() {
+      const dot = document.getElementById('heroHoursDot');
+      const text = document.getElementById('heroHoursText');
+      if (!dot || !text) return;
+
+      const parts = new Intl.DateTimeFormat('en-US', {
+        timeZone: 'Atlantic/Faroe',
+        weekday: 'short', hour: '2-digit', minute: '2-digit', hourCycle: 'h23'
+      }).formatToParts(new Date());
+      const get = (type) => parts.find(p => p.type === type)?.value;
+      const isSunday = get('weekday') === 'Sun';
+      const minutesNow = parseInt(get('hour'), 10) * 60 + parseInt(get('minute'), 10);
+
+      const OPEN = 9 * 60, CLOSE = 19 * 60;
+      const isOpenNow = !isSunday && minutesNow >= OPEN && minutesNow < CLOSE;
+
+      dot.classList.toggle('closed', !isOpenNow);
+
+      if (isOpenNow) {
+        text.innerHTML = 'Í dag opið &nbsp;·&nbsp; 09:00 – 19:00';
+      } else if (isSunday) {
+        text.textContent = 'Í dag stongt';
+      } else if (minutesNow < OPEN) {
+        text.textContent = 'Stongt · Opnar kl. 09:00';
+      } else {
+        text.textContent = 'Stongt · Opnar aftur kl. 09:00';
+      }
+    }
+    document.addEventListener('DOMContentLoaded', updateOpenStatus);
+    setInterval(updateOpenStatus, 60000);
 
     function toggleExpand(btn) {
       btn.closest('.expandable-wrap').classList.toggle('open');
