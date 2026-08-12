@@ -74,8 +74,16 @@ async function handleRequestCode(request, env, cors) {
   const rec = { hash: await sha256(p + ':' + code), exp: now + CODE_TTL_MS, tries: 0 };
   await kv.put('code:' + p, JSON.stringify(rec), { expirationTtl: Math.ceil(CODE_TTL_MS / 1000) + 60 });
 
-  await sendSms(env, p,
-    `Tín váttanarkoda er ${code}. Kodan er galdandi í 10 minuttir.`);
+  // A number the carrier can't SMS (landline, disconnected) makes Twilio reject
+  // the send — surface that as a clear error instead of a raw 500.
+  try {
+    await sendSms(env, p,
+      `Tín váttanarkoda er ${code}. Kodan er galdandi í 10 minuttir.`);
+  } catch (e) {
+    console.warn('Code SMS failed:', e);
+    await kv.delete('code:' + p);
+    return json({ error: 'sms_failed' }, 502, cors);
+  }
 
   return json({ ok: true }, 200, cors);
 }
@@ -120,14 +128,19 @@ async function handleVerifyOrder(request, env, cors) {
 
 /* ---------- helpers ---------- */
 
-// +298 mobile, exactly 6 digits, first digit 2/5/7/8
+// +298 followed by exactly 6 digits. Any Faroese range is accepted except the
+// 90xxxx premium-rate series, which would bill us per message.
 function normalizePhone(raw) {
   let p = String(raw || '').replace(/\s|-/g, '');
-  if (!p.startsWith('+')) p = '+298' + p.replace(/\D/g, '');
+  if (p.startsWith('00')) p = '+' + p.slice(2);
+  if (!p.startsWith('+')) {
+    const digits = p.replace(/\D/g, '');
+    p = '+' + (digits.length === 9 && digits.startsWith('298') ? digits : '298' + digits);
+  }
   return p;
 }
 function validFaroeMobile(p) {
-  return /^\+298[2578]\d{5}$/.test(p);
+  return /^\+298(?!90)\d{6}$/.test(p);
 }
 
 async function verifyTurnstile(env, token, ip) {

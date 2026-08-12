@@ -2446,9 +2446,13 @@
     function requestCode() {
       const phone = document.getElementById('o-phone').value.trim();
       let fmt = phone.replace(/[\s-]/g, '');
-      if (!fmt.startsWith('+')) fmt = '+298' + fmt.replace(/\D/g, '');
-      if (!/^\+298[2578]\d{5}$/.test(fmt)) {
-        alert('Skriva eitt gildigt telefonnummar (6 tøl, byrjar við 2, 5, 7 ella 8).');
+      if (fmt.startsWith('00')) fmt = '+' + fmt.slice(2);
+      if (!fmt.startsWith('+')) {
+        const digits = fmt.replace(/\D/g, '');
+        fmt = '+' + (digits.length === 9 && digits.startsWith('298') ? digits : '298' + digits);
+      }
+      if (!/^\+298(?!90)\d{6}$/.test(fmt)) {
+        alert('Skriva eitt gildigt føroyskt telefonnummar (6 tøl).');
         return;
       }
 
@@ -2524,7 +2528,8 @@
     // Faroese text for the Worker's error codes.
     function orderErrorText(err, triesLeft) {
       switch (err) {
-        case 'invalid_phone':    return 'Skriva eitt gildigt telefonnummar (6 tøl, byrjar við 2, 5, 7 ella 8).';
+        case 'invalid_phone':    return 'Skriva eitt gildigt føroyskt telefonnummar (6 tøl).';
+        case 'sms_failed':       return 'Hetta nummarið kann ikki taka við SMS. Nýt eitt fartelefonnummar.';
         case 'bot_check_failed': return 'Robot-eftirkanningin miseydnaðist. Royn aftur.';
         case 'too_soon':         return 'Bíða eitt minutt áðrenn tú biður um eina nýggja kóðu.';
         case 'hourly_limit':
