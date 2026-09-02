@@ -464,8 +464,9 @@ stock toggles.
 - [x] Eyeball the section on the deployed dev site, mobile and tablet (see §5)
 - [x] Show offers in the ordering list as well — `4b3c236` (§4.8), verified live
       on `fossabudin-dev.eydfinn-rajani-faroe.workers.dev`
-- [x] Cards lead into an order with the product selected — `5351156` (§4.9),
-      on `dev` only; `main` needs owner approval
+- [x] Cards lead into an order with the product selected — `5351156` (§4.9);
+      owner approved the merge, shipped to production 2026-09-02 as a
+      fast-forward `dev`→`main` (`9c70697`) and verified live on fossabudin.fo
 - [ ] Owner to check the Faroese in the step-1 notice and the `Uppselt` badge (§4.9)
 - [ ] Decide whether an already-open page should pick up offer changes without a
       reload (polling `/offers`), or whether next-load is enough — see §4.8
