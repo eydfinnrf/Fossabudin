@@ -264,6 +264,71 @@ added or removed in admin could be up to a minute stale on a fresh load.
 and both the card and the ordering-list badge follow on the next page load. A
 page already open does not update until reloaded.
 
+### 4.9 Cards order the product (2026-09-02, commit `5351156`, branch `dev`)
+
+Owner: *"a new function that will make it possible to click on a … 'Ja takk
+tilboð' product, that will lead you straight to a Order on the 'Bílegg vørur'
+page where a new order is under progress and the 'Ja takk tilboð' product is
+auto selected in the order and where its possible to continue a order."*
+
+This reverses §2's "the card is a poster" decision — deliberately, on the
+owner's instruction. The card is now the entry point to the order.
+
+**Flow.** Tapping a card starts a **fresh** order (`resetOrderForm()` first, so
+a card never adds to a stale basket), opens the order page, and selects that
+exact sub-item straight away — it counts in the basket badge immediately. The
+**island is still chosen first**; the owner confirmed mid-build that this is an
+important detail, and an order cannot be sent without it. Step 1 therefore shows
+a green confirmation line —
+*"Vit hava lagt **‹name›** í bíleggingina. Vel oyggj fyri at halda fram."* —
+and once an island is picked the page **scrolls to the selected row and flashes
+it** instead of scrolling to the top of the form.
+
+**Points worth keeping:**
+
+| Thing | Why it is like that |
+|---|---|
+| `.jatakk-card` is a `<button>` | Keyboard and screen-reader reachable. Button defaults (centred text, UA font, shrink-to-fit) are undone in CSS or the row layout collapses. Click is bound with `addEventListener`, not an inline `onclick` — no CSP `unsafe-inline` reliance and no quoting problem with names containing apostrophes. |
+| `›` chevron (`.jatakk-go`) | The affordance. Same glyph the ordering list uses for "this opens something". Measured: 4px wide, so §4.6's name-width work still holds. |
+| `resetOrderForm()` also clears the product search | A leftover query leaves rows `display:none`. Without this the auto-selected item could be selected but invisible. |
+| Sold-out cards are disabled + `Uppselt` | Offers are never auto-removed when an item sells out (§2), but `/catalog` serves in-stock items only — so such a card has **nothing to select**. `applyOfferCardStates()` switches it off rather than opening an empty order. It bails out unless a real catalog rendered, so an API outage does not grey out every card. |
+| The catalog/offers race | Two independent `DOMContentLoaded` fetches. A card tapped before `/catalog` lands stores `pendingOfferSubId`; `renderCatalog()` applies it on arrival (and focuses it if the form is already open). |
+| `setTimeout`, not `requestAnimationFrame` | rAF never fires in a backgrounded tab, which would strand the customer at the top of the form. |
+| `applyPendingOffer()` guards on `.chosen` | `toggleSubItem()` flips — calling it on an already-selected row would *deselect* it. |
+
+**Verified in-browser** (local copy, then the deployed dev site):
+
+- Card → order page opens at step 1, item chosen, qty control shown, basket = 1
+- Island → row scrolled to (`scrollIntoView` centred, confirmed landing at
+  `top: 342` in a 720px viewport) and flashed; only one scroll target, no fight
+  with the old form-top scroll
+- Order summary still collects `1x Coco Cola 24 blik` — `cleanItemName()`
+  strips the badge, so the owner's SMS is unaffected
+- A second card click starts a **fresh** order (1 item, island deselected,
+  form back to step 1) rather than accumulating
+- Leftover search `kaffi` (row hidden) → cleared, row visible and chosen
+- Sold-out simulation → card `disabled`, `Uppselt`, click does nothing, other
+  cards unaffected; restoring the row re-enables it (idempotent)
+- Catalog-still-loading simulation → notice shown, basket 0, island selectable;
+  item selected + flashed when the catalog lands
+- Hero "Bílegg vørur" path unchanged: scrolls to `#orderFormWrap`, nothing
+  pre-selected, `releaseFormWrapCap` still runs
+- Layout: 320 / 375 / 1280px, no horizontal overflow, cards equal height, the
+  longest real name (50 chars, "Fryseposer med skrivefelt…") unclamped, a
+  152-char name clamps to exactly 3 lines
+- No console errors and no CSP violations on
+  `fossabudin-dev.eydfinn-rajani-faroe.workers.dev`
+
+**Not verified:** the smooth-scroll *animation* itself. The preview pane reports
+`document.hidden`, and Chrome drops smooth scrolling in a hidden tab, so the
+scroll was confirmed by spying on the `scrollIntoView` call and by running it
+with `behavior:'auto'`. Worth one eyeball on a real phone.
+
+**Faroese wording is unreviewed.** "Vit hava lagt … í bíleggingina. Vel oyggj
+fyri at halda fram." and the `Uppselt` card badge were written here, not by the
+owner. Earlier strings in this feature were owner-corrected (§2), so these
+should be too.
+
 ---
 
 ## 5. Verification actually performed
@@ -399,6 +464,9 @@ stock toggles.
 - [x] Eyeball the section on the deployed dev site, mobile and tablet (see §5)
 - [x] Show offers in the ordering list as well — `4b3c236` (§4.8), verified live
       on `fossabudin-dev.eydfinn-rajani-faroe.workers.dev`
+- [x] Cards lead into an order with the product selected — `5351156` (§4.9),
+      on `dev` only; `main` needs owner approval
+- [ ] Owner to check the Faroese in the step-1 notice and the `Uppselt` badge (§4.9)
 - [ ] Decide whether an already-open page should pick up offer changes without a
       reload (polling `/offers`), or whether next-load is enough — see §4.8
 - [x] Owner approved merge `dev` → `main` — shipped 7 Aug, fast-forward to
