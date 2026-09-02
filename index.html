@@ -1166,7 +1166,10 @@
     }
 
     /* A wide, shallow row: icon, then the words. (It replaced a tall 4:3 tile
-       that only made sense with a photograph.) */
+       that only made sense with a photograph.)
+       The card is a <button> now — tapping it opens the order page with this
+       exact variant already picked — so the button defaults that would wreck
+       the row (centred text, UA font, shrink-to-fit width) are undone here. */
     .jatakk-card {
       background: #fff;
       border: 1px solid var(--warm);
@@ -1175,6 +1178,40 @@
       align-items: center;
       gap: 1rem;
       padding: .95rem 1.05rem;
+      width: 100%;
+      font-family: inherit;
+      text-align: left;
+      cursor: pointer;
+      transition: border-color .18s, box-shadow .18s, transform .12s;
+    }
+    .jatakk-card:hover { border-color: var(--green); box-shadow: 0 4px 14px rgba(42,34,26,.08); }
+    .jatakk-card:active { transform: translateY(1px); }
+    .jatakk-card:focus-visible { outline: 2px solid var(--green); outline-offset: 2px; }
+
+    /* Same chevron the ordering list uses for "this opens something". */
+    .jatakk-go {
+      flex: 0 0 auto;
+      font-size: .95rem;
+      color: var(--stone);
+      transition: color .18s, transform .18s;
+    }
+    .jatakk-card:hover .jatakk-go { color: var(--green); transform: translateX(2px); }
+
+    /* An offer is deliberately never auto-removed when its item sells out, so a
+       card can outlive its row in the ordering list. Switch that card off and
+       say why, rather than opening an order it cannot be added to. */
+    .jatakk-card[disabled] { cursor: default; opacity: .62; }
+    .jatakk-card[disabled]:hover { border-color: var(--warm); box-shadow: none; }
+    .jatakk-card[disabled]:hover .jatakk-go { color: var(--stone); transform: none; }
+    .jatakk-out {
+      flex: 0 0 auto;
+      background: var(--warm);
+      color: var(--bark);
+      font-size: .7rem;
+      font-weight: 600;
+      letter-spacing: .04em;
+      padding: .22rem .5rem;
+      border-radius: 20px;
     }
 
     .jatakk-emoji {
@@ -1257,6 +1294,30 @@
       font-weight: 300;
       font-size: .95rem;
     }
+
+    /* One pulse on the row an offer card just picked, so it is obvious which
+       of the 406 items landed in the order. */
+    @keyframes subItemFlash {
+      0%, 100% { box-shadow: 0 0 0 0 rgba(74,103,65,0); }
+      30%      { box-shadow: 0 0 0 4px rgba(74,103,65,.30); }
+    }
+    .sub-item.flash { animation: subItemFlash 1.5s ease-out; }
+    @media (prefers-reduced-motion: reduce) { .sub-item.flash { animation: none; } }
+
+    /* Step 1 confirmation, shown only when the order was started from a card. */
+    .op-offer-notice {
+      background: var(--green-lt);
+      border: 1px solid var(--green);
+      border-radius: 10px;
+      padding: .8rem 1.1rem;
+      margin-top: 1.8rem;
+      font-size: .82rem;
+      line-height: 1.5;
+      color: var(--ink);
+      text-align: left;
+    }
+    .op-offer-notice strong { font-weight: 600; }
+    .op-offer-notice[hidden] { display: none; }
 
     #galleri {
       background: #fff;
@@ -1743,6 +1804,10 @@
       <p class="section-label">Bílegging</p>
       <h2 class="section-title">Bílegg vørur</h2>
 
+      <!-- Filled in by orderOffer() when the order was started by tapping a
+           Ja Takk Tilboð card; hidden again by resetOrderForm(). -->
+      <p class="op-offer-notice" id="offerNotice" hidden></p>
+
       <!-- "Vel oyggj" — display label, not clickable -->
       <div style="background:#fff;border:1.5px solid var(--warm);border-radius:10px;padding:1rem 1.4rem;margin-top:1.8rem;text-align:left;">
         <div style="font-family:'Playfair Display',serif;font-size:1rem;font-weight:600;color:var(--ink);text-transform:none;letter-spacing:normal;">Vel oyggj</div>
@@ -1887,6 +1952,16 @@
       // Collapse all expanded panels
       document.querySelectorAll('.expandable-wrap.open').forEach(w => w.classList.remove('open'));
 
+      // Clear the product search — a leftover query keeps rows filtered out,
+      // which would hide the item an offer card is about to select.
+      const search = document.getElementById('prodSearch');
+      if (search && search.value) { search.value = ''; filterProducts(); }
+
+      // Drop any pending Ja Takk Tilboð pick and its confirmation line
+      pendingOfferSubId = null;
+      const offerNotice = document.getElementById('offerNotice');
+      if (offerNotice) { offerNotice.hidden = true; offerNotice.textContent = ''; }
+
       // Scroll order page back to top
       document.getElementById('orderPage').scrollTop = 0;
     }
@@ -1909,8 +1984,23 @@
       document.getElementById('formDestLabel').textContent = labels[id];
       const formWrap = document.getElementById('orderFormWrap');
       formWrap.classList.add('open');
-      setTimeout(() => formWrap.scrollIntoView({ behavior: 'smooth', block: 'start' }), 80);
-      releaseFormWrapCap(formWrap);
+
+      // Started from a Ja Takk Tilboð card: go to that row instead of the top
+      // of the form. The reveal animates under a 6000px max-height cap, so the
+      // cap is dropped first — otherwise we'd scroll to a position the row has
+      // not reached yet.
+      if (pendingOfferSubId != null && applyPendingOffer()) {
+        formWrap.style.maxHeight = 'none';
+        const notice = document.getElementById('offerNotice');
+        if (notice) notice.hidden = true;   // "vel oyggj" is done
+        // setTimeout, not requestAnimationFrame: rAF never fires while the tab
+        // is backgrounded, which would leave the customer at the top of the
+        // form with no idea where their item went.
+        setTimeout(focusOfferItem, 60);
+      } else {
+        setTimeout(() => formWrap.scrollIntoView({ behavior: 'smooth', block: 'start' }), 80);
+        releaseFormWrapCap(formWrap);
+      }
     }
 
     /* The .open class only sets a fixed max-height (6000px) to animate the
@@ -1965,7 +2055,13 @@
 
       grid.innerHTML = '';
       offers.forEach(o => {
-        const card = _el('div', 'jatakk-card');
+        const card = _el('button', 'jatakk-card');
+        card.type = 'button';
+        card.dataset.subId = o.sub_item_id;
+        // The name is already inside the card, but read out on its own the row
+        // is a price list; this says what the button does.
+        card.setAttribute('aria-label', 'Bílegg ' + o.name + ' — ' + fmtKr(o.price_new));
+        card.addEventListener('click', () => orderOffer(o.sub_item_id, o.name));
         card.appendChild(_el('div', 'jatakk-emoji', o.emoji || '🛒'));
         const body = _el('div', 'jatakk-body');
         const name = _el('div', 'jatakk-name', o.name);
@@ -1977,10 +2073,12 @@
         if (o.price_old != null) pricing.appendChild(_el('span', 'jatakk-price-old', fmtKr(o.price_old)));
         body.appendChild(pricing);
         card.appendChild(body);
+        card.appendChild(_el('span', 'jatakk-go', '›'));
         grid.appendChild(card);
       });
       grid.hidden = false;
       status.hidden = true;
+      applyOfferCardStates();   // no-op until the catalog has rendered
     }
 
     async function loadOffers() {
@@ -2028,6 +2126,77 @@
                             head.querySelector('.expand-arrow'));
         }
       });
+    }
+
+    /* ── Order straight from a Ja Takk Tilboð card ──────────────
+       Tapping a card starts a FRESH order with that exact variant already
+       picked. The island still has to be chosen — an order cannot be sent
+       without it — so the pick is made straight away (it counts in the basket
+       immediately) and the row is scrolled to and flashed once the form opens.
+       If the card is tapped before /catalog has landed, renderCatalog() applies
+       the pick when it does. */
+    let pendingOfferSubId = null;
+    let catalogRendered = false;
+
+    /** The ordering row for a sub-item, or null. Number() sanitises the id
+        before it goes into a selector. */
+    function findSubItemEl(subId) {
+      const id = Number(subId);
+      if (!Number.isFinite(id)) return null;
+      return document.querySelector('.sub-item[data-sub-id="' + id + '"]');
+    }
+
+    /** /catalog serves in-stock items only, but an offer is never auto-removed
+        when its item sells out, so a card can outlive its ordering row. Those
+        cards get switched off and marked "Uppselt" instead of opening an order
+        that cannot contain them. Skipped entirely until a real catalog is on
+        the page, so an API outage doesn't switch every card off. */
+    function applyOfferCardStates() {
+      if (!catalogRendered) return;
+      document.querySelectorAll('.jatakk-card[data-sub-id]').forEach(card => {
+        const orderable = !!findSubItemEl(card.dataset.subId);
+        card.disabled = !orderable;
+        card.querySelector('.jatakk-out')?.remove();
+        if (!orderable) card.querySelector('.jatakk-pricing')
+                            ?.appendChild(_el('span', 'jatakk-out', 'Uppselt'));
+      });
+    }
+
+    function orderOffer(subId, name) {
+      resetOrderForm();            // a new order, not an addition to an old one
+      pendingOfferSubId = Number(subId);
+      openOrderPage();
+
+      const notice = document.getElementById('offerNotice');
+      if (notice) {
+        notice.textContent = '';
+        // append(), not innerHTML — a product name is database text.
+        notice.append('Vit hava lagt ', _el('strong', null, name),
+                      ' í bíleggingina. Vel oyggj fyri at halda fram.');
+        notice.hidden = false;
+      }
+      applyPendingOffer();
+    }
+
+    /** Select the pending offer's row. False while the catalog is still
+        loading — renderCatalog() calls this again when it lands. */
+    function applyPendingOffer() {
+      if (pendingOfferSubId == null) return false;
+      const sb = findSubItemEl(pendingOfferSubId);
+      if (!sb) return false;
+      sb.closest('.expandable-wrap')?.classList.add('open');
+      // toggleSubItem() flips, so an already-chosen row must be left alone.
+      if (!sb.classList.contains('chosen')) toggleSubItem(sb);
+      return true;
+    }
+
+    function focusOfferItem() {
+      const sb = findSubItemEl(pendingOfferSubId);
+      if (!sb) return;
+      sb.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      sb.classList.remove('flash');
+      void sb.offsetWidth;         // restart the animation if it already ran
+      sb.classList.add('flash');
     }
 
     function toggleProduct(el) { el.classList.toggle('chosen'); }
@@ -2107,6 +2276,13 @@
         host.appendChild(c);
       });
       applyOfferBadges();   // no-op if the offers have not landed yet
+      catalogRendered = true;
+      applyOfferCardStates();
+      // A card tapped while this fetch was still in flight.
+      if (applyPendingOffer() &&
+          document.getElementById('orderFormWrap')?.classList.contains('open')) {
+        focusOfferItem();
+      }
     }
 
     async function loadCatalog() {
